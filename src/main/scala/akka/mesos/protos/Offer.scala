@@ -4,21 +4,20 @@ import org.apache.mesos.Protos.{ Offer => PBOffer }
 import scala.collection.JavaConverters._
 
 case class Offer(
-  id: OfferID,
-  slaveID: SlaveID,
-  hostname: String,
-  resources: Seq[Resource],
-  attributes: Seq[Attribute],
-  executorIDs: Seq[ExecutorID]
-) {
-  def toProtos: PBOffer =
+    id: OfferID,
+    slaveID: SlaveID,
+    hostname: String,
+    resources: Seq[Resource],
+    attributes: Seq[Attribute],
+    executorIDs: Seq[ExecutorID]) {
+  def toProto: PBOffer =
     PBOffer
       .newBuilder
-      .setId(id.toProtos)
-      .setSlaveId(slaveID.toProtos)
+      .setId(id.toProto)
+      .setSlaveId(slaveID.toProto)
       .setHostname(hostname)
-      .addAllResources(resources.map(_.toProtos).asJava)
-      .addAllAttributes(attributes.map(_.toProtos).asJava)
-      .addAllExecutorIds(executorIDs.map(_.toProtos).asJava)
+      .addAllResources(resources.map(_.toProto).asJava)
+      .addAllAttributes(attributes.map(_.toProto).asJava)
+      .addAllExecutorIds(executorIDs.map(_.toProto).asJava)
       .build()
 }

@@ -3,11 +3,11 @@ package akka.mesos.protos
 import org.apache.mesos.Protos.{ Attribute => PBAttribute, Value }
 
 sealed trait Attribute {
-  def toProtos: PBAttribute
+  def toProto: PBAttribute
 }
 
 case class TextAttribute(name: String, text: String) extends Attribute {
-  def toProtos: PBAttribute =
+  def toProto: PBAttribute =
     PBAttribute
       .newBuilder
       .setName(name)

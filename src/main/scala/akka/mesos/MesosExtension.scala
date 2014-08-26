@@ -1,7 +1,7 @@
 package akka.mesos
 
 import akka.mesos.protos.FrameworkInfo
-import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
+import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import akka.libprocess.{ LibProcess, PID, LibProcessMessage }
 import mesos.internal.Messages._
 import akka.libprocess.LibProcessManager._

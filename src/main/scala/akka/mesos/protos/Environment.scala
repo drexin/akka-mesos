@@ -5,16 +5,16 @@ import PBEnvironment.{ Variable => PBVariable }
 import scala.collection.JavaConverters._
 
 case class Environment(variables: Seq[Environment.Variable]) {
-  def toProtos: PBEnvironment =
+  def toProto: PBEnvironment =
     PBEnvironment
       .newBuilder
-      .addAllVariables(variables.map(_.toProtos).asJava)
+      .addAllVariables(variables.map(_.toProto).asJava)
       .build()
 }
 
 object Environment {
   case class Variable(name: String, value: String) {
-    def toProtos: PBVariable =
+    def toProto: PBVariable =
       PBVariable
         .newBuilder
         .setName(name)

@@ -8,15 +8,14 @@ sealed trait Resource {
   def tpe: ResourceType
   def role: Option[String]
 
-  def toProtos: PBResource
+  def toProto: PBResource
 }
 
 case class ScalarResource(
-  tpe: ResourceType,
-  value: Double,
-  role: Option[String] = None
-) extends Resource {
-  def toProtos: PBResource = {
+    tpe: ResourceType,
+    value: Double,
+    role: Option[String] = None) extends Resource {
+  def toProto: PBResource = {
     val builder =
       PBResource
         .newBuilder
@@ -31,11 +30,10 @@ case class ScalarResource(
 }
 
 case class RangesResource(
-  tpe: ResourceType,
-  value: Seq[Range],
-  role: Option[String] = None
-) extends Resource {
-  def toProtos: PBResource = {
+    tpe: ResourceType,
+    value: Seq[Range],
+    role: Option[String] = None) extends Resource {
+  def toProto: PBResource = {
     val builder =
       PBResource
         .newBuilder
@@ -65,11 +63,10 @@ case class RangesResource(
 }
 
 case class SetResource(
-  tpe: ResourceType,
-  value: Seq[String],
-  role: Option[String] = None
-) extends Resource {
-  def toProtos: PBResource = {
+    tpe: ResourceType,
+    value: Seq[String],
+    role: Option[String] = None) extends Resource {
+  def toProto: PBResource = {
     val builder =
       PBResource
         .newBuilder
@@ -104,10 +101,10 @@ object ResourceType {
   }
 
   def fromString(tpe: String): ResourceType = tpe.toLowerCase match {
-    case "cpus"   => CPUS
-    case "mem"    => MEM
-    case "ports"  => PORTS
-    case "disk"   => DISK
+    case "cpus"  => CPUS
+    case "mem"   => MEM
+    case "ports" => PORTS
+    case "disk"  => DISK
   }
 
   def apply(tpe: String): ResourceType = fromString(tpe)

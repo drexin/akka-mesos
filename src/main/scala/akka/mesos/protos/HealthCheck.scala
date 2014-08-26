@@ -9,24 +9,23 @@ trait HealthCheck {
   def interval: Option[Duration]
   def timeout: Option[Duration]
   def gracePeriod: Option[Duration]
-  def failures: Option[Int]
+  def consecutiveFailures: Option[Int]
   def command: Option[CommandInfo]
 
-  def toProtos: PBHealthCheck
+  def toProto: PBHealthCheck
 }
 
 case class HTTPHealthCheck(
-  port: Int,
-  statuses: Seq[Int],
-  path: Option[String] = None,
-  delay: Option[Duration] = None,
-  interval: Option[Duration] = None,
-  timeout: Option[Duration] = None,
-  gracePeriod: Option[Duration] = None,
-  failures: Option[Int] = None,
-  command: Option[CommandInfo] = None
-) extends HealthCheck {
-  def toProtos: PBHealthCheck = {
+    port: Int,
+    statuses: Seq[Int],
+    path: Option[String] = None,
+    delay: Option[Duration] = None,
+    interval: Option[Duration] = None,
+    timeout: Option[Duration] = None,
+    gracePeriod: Option[Duration] = None,
+    consecutiveFailures: Option[Int] = None,
+    command: Option[CommandInfo] = None) extends HealthCheck {
+  def toProto: PBHealthCheck = {
     val httpBuilder = PBHealthCheck.HTTP
       .newBuilder
       .setPort(port)
@@ -40,8 +39,8 @@ case class HTTPHealthCheck(
     interval.foreach(d => builder.setIntervalSeconds(d.toMillis.toDouble / 1000))
     timeout.foreach(d => builder.setTimeoutSeconds(d.toMillis.toDouble / 1000))
     gracePeriod.foreach(d => builder.setGracePeriodSeconds(d.toMillis.toDouble / 1000))
-    failures.foreach(builder.setFailures)
-    command.foreach(c => builder.setCommand(c.toProtos))
+    consecutiveFailures.foreach(builder.setConsecutiveFailures)
+    command.foreach(c => builder.setCommand(c.toProto))
 
     builder.build()
   }
