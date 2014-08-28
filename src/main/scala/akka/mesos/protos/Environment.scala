@@ -13,7 +13,9 @@ case class Environment(variables: Seq[Environment.Variable]) {
 }
 
 object Environment {
-  case class Variable(name: String, value: String) {
+  case class Variable(
+      name: String,
+      value: String) {
     def toProto: PBVariable =
       PBVariable
         .newBuilder

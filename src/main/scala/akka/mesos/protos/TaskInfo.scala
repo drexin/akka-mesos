@@ -14,7 +14,7 @@ case class TaskInfo(
     command: Option[CommandInfo],
     data: Option[ByteString],
     healthCheck: Option[HealthCheck]) {
-  def toProtos: PBTaskInfo = {
+  def toProto: PBTaskInfo = {
     val builder =
       PBTaskInfo
         .newBuilder
