@@ -2,7 +2,7 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos
 
-class PerfStatistics(
+final class PerfStatistics(
     timestamp: Double,
     duration: Double,
     hardware: PerfStatistics.Hardware,
@@ -21,7 +21,7 @@ class PerfStatistics(
 }
 
 object PerfStatistics {
-  case class Hardware(
+  final case class Hardware(
       cycles: Option[Long] = None,
       stalledCyclesFrontend: Option[Long] = None,
       stalledCyclesBackend: Option[Long] = None,
@@ -50,7 +50,7 @@ object PerfStatistics {
     }
   }
 
-  case class Software(
+  final case class Software(
       cpuClock: Option[Double] = None,
       taskClock: Option[Double] = None,
       pageFaults: Option[Long] = None,
@@ -77,7 +77,7 @@ object PerfStatistics {
     }
   }
 
-  case class Cache(
+  final case class Cache(
       l1DCacheLoads: Option[Long] = None,
       l1DCacheLoadMisses: Option[Long] = None,
       l1DCacheStores: Option[Long] = None,

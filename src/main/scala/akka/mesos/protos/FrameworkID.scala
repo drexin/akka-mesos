@@ -2,7 +2,7 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos.{ FrameworkID => PBFramworkID }
 
-case class FrameworkID(value: String) {
+final case class FrameworkID(value: String) {
   def toProto: PBFramworkID =
     PBFramworkID.newBuilder
       .setValue(value)

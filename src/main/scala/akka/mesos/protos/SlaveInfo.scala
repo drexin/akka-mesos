@@ -3,7 +3,7 @@ package akka.mesos.protos
 import org.apache.mesos.Protos
 import scala.collection.JavaConverters._
 
-case class SlaveInfo(
+final case class SlaveInfo(
     hostname: String,
     port: Option[Int] = None,
     resources: Seq[Resource] = Nil,

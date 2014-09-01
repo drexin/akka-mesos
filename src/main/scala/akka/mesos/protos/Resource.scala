@@ -11,7 +11,7 @@ sealed trait Resource {
   def toProto: PBResource
 }
 
-case class ScalarResource(
+final case class ScalarResource(
     tpe: ResourceType,
     value: Double,
     role: Option[String] = None) extends Resource {
@@ -29,7 +29,7 @@ case class ScalarResource(
   }
 }
 
-case class RangesResource(
+final case class RangesResource(
     tpe: ResourceType,
     value: Seq[Range],
     role: Option[String] = None) extends Resource {
@@ -46,7 +46,7 @@ case class RangesResource(
     builder.build()
   }
 
-  private final def ranges = {
+  private def ranges = {
     PBRanges
       .newBuilder
       .addAllRange(
@@ -62,7 +62,7 @@ case class RangesResource(
   }
 }
 
-case class SetResource(
+final case class SetResource(
     tpe: ResourceType,
     value: Seq[String],
     role: Option[String] = None) extends Resource {
@@ -85,19 +85,19 @@ sealed trait ResourceType
 object ResourceType {
 
   case object CPUS extends ResourceType {
-    override def toString() = "cpus"
+    override def toString = "cpus"
   }
 
   case object MEM extends ResourceType {
-    override def toString() = "mem"
+    override def toString = "mem"
   }
 
   case object PORTS extends ResourceType {
-    override def toString() = "ports"
+    override def toString = "ports"
   }
 
   case object DISK extends ResourceType {
-    override def toString() = "disk"
+    override def toString = "disk"
   }
 
   def fromString(tpe: String): ResourceType = tpe.toLowerCase match {

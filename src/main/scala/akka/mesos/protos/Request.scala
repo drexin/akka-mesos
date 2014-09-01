@@ -4,7 +4,7 @@ import org.apache.mesos.Protos
 
 import scala.collection.JavaConverters._
 
-class Request(
+final case class Request(
     slaveId: Option[SlaveID] = None,
     resources: Seq[Resource] = Nil) {
   def toProto: Protos.Request = {

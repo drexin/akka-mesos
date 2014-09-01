@@ -4,7 +4,7 @@ import scala.concurrent.duration._
 import org.apache.mesos.Protos.{ HealthCheck => PBHealthCheck }
 import scala.collection.JavaConverters._
 
-trait HealthCheck {
+sealed trait HealthCheck {
   def delay: Option[Duration]
   def interval: Option[Duration]
   def timeout: Option[Duration]
@@ -15,7 +15,7 @@ trait HealthCheck {
   def toProto: PBHealthCheck
 }
 
-case class HTTPHealthCheck(
+final case class HTTPHealthCheck(
     port: Int,
     statuses: Seq[Int],
     path: Option[String] = None,

@@ -5,7 +5,7 @@ import org.apache.mesos.Protos.{ TaskInfo => PBTaskInfo }
 import com.google.protobuf.{ ByteString => PBByteString }
 import scala.collection.JavaConverters._
 
-case class TaskInfo(
+final case class TaskInfo(
     name: String,
     taskID: TaskID,
     slaveID: SlaveID,

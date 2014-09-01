@@ -4,7 +4,7 @@ import org.apache.mesos.Protos
 
 import scala.concurrent.duration.Duration
 
-case class ResourceStatistics(
+final case class ResourceStatistics(
     cpu: ResourceStatistics.CPU,
     memory: ResourceStatistics.Memory,
     perf: PerfStatistics,
@@ -21,7 +21,7 @@ case class ResourceStatistics(
 }
 
 object ResourceStatistics {
-  case class CPU(
+  final case class CPU(
       userTime: Option[Duration] = None,
       systemTime: Option[Duration] = None,
       throttledTime: Option[Duration] = None,
@@ -44,7 +44,7 @@ object ResourceStatistics {
     private def durationToSeconds(d: Duration): Double = d.toMillis / 1000
   }
 
-  case class Memory(
+  final case class Memory(
       residentSetSize: Option[Long] = None,
       limit: Option[Long] = None,
       files: Option[Long] = None,
@@ -63,7 +63,7 @@ object ResourceStatistics {
     }
   }
 
-  case class Network(
+  final case class Network(
       rxPackets: Option[Long],
       rxBytes: Option[Long],
       rxErrors: Option[Long],

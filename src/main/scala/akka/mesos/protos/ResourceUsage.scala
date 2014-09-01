@@ -2,7 +2,7 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos
 
-case class ResourceUsage(
+final case class ResourceUsage(
     slaveId: SlaveID,
     frameworkId: FrameworkID,
     executorId: Option[ExecutorID],

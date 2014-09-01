@@ -5,7 +5,7 @@ import org.apache.mesos.Protos.{ TaskStatus => PBTaskStatus }
 import com.google.protobuf.{ ByteString => PBByteString }
 import scala.collection.JavaConverters._
 
-case class TaskStatus(
+final case class TaskStatus(
     taskId: TaskID,
     state: TaskState,
     message: Option[String] = None,

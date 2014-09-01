@@ -3,7 +3,7 @@ package akka.mesos.protos
 import org.apache.mesos.Protos.{ FrameworkInfo => PBFrameworkInfo }
 import scala.concurrent.duration._
 
-case class FrameworkInfo(
+final case class FrameworkInfo(
     name: String,
     user: String,
     id: Option[FrameworkID] = None,

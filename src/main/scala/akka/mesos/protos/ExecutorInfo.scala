@@ -5,7 +5,7 @@ import org.apache.mesos.Protos.{ ExecutorInfo => PBExecutorInfo }
 import scala.collection.JavaConverters._
 import com.google.protobuf.{ ByteString => PBByteString }
 
-case class ExecutorInfo(
+final case class ExecutorInfo(
     executorID: ExecutorID,
     command: CommandInfo,
     resources: Seq[Resource],

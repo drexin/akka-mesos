@@ -2,7 +2,7 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos
 
-case class Volume(containerPath: String, mode: Volume.Mode, hostPath: Option[String] = None) {
+final case class Volume(containerPath: String, mode: Volume.Mode, hostPath: Option[String] = None) {
   def toProto: Protos.Volume = {
     val builder = Protos.Volume
       .newBuilder()
@@ -15,7 +15,7 @@ case class Volume(containerPath: String, mode: Volume.Mode, hostPath: Option[Str
 }
 
 object Volume {
-  trait Mode {
+  sealed trait Mode {
     def toProto: Protos.Volume.Mode
   }
 

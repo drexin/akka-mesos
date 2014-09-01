@@ -3,13 +3,13 @@ package akka.mesos.protos
 import org.apache.mesos.Protos
 import scala.collection.JavaConverters._
 
-trait ContainerInfo {
+sealed trait ContainerInfo {
   def volumes: Seq[Volume]
 
   def toProto: Protos.ContainerInfo
 }
 
-case class DockerContainerInfo(volumes: Seq[Volume], image: String) extends ContainerInfo {
+final case class DockerContainerInfo(volumes: Seq[Volume], image: String) extends ContainerInfo {
   override def toProto: Protos.ContainerInfo =
     Protos.ContainerInfo
       .newBuilder()

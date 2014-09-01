@@ -3,7 +3,7 @@ package akka.mesos.protos
 import org.apache.mesos.Protos.{ Offer => PBOffer }
 import scala.collection.JavaConverters._
 
-case class Offer(
+final case class Offer(
     id: OfferID,
     slaveID: SlaveID,
     hostname: String,

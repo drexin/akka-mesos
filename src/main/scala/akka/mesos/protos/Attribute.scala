@@ -6,7 +6,7 @@ sealed trait Attribute {
   def toProto: PBAttribute
 }
 
-case class TextAttribute(name: String, text: String) extends Attribute {
+final case class TextAttribute(name: String, text: String) extends Attribute {
   def toProto: PBAttribute =
     PBAttribute
       .newBuilder

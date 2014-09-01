@@ -8,7 +8,7 @@ import PBCommandInfo.{
 
 import scala.collection.JavaConverters._
 
-case class CommandInfo(
+final case class CommandInfo(
     uris: Seq[CommandInfo.URI],
     value: String,
     environment: Option[Environment] = None,
@@ -34,7 +34,7 @@ case class CommandInfo(
 }
 
 object CommandInfo {
-  case class ContainerInfo(
+  final case class ContainerInfo(
       image: String,
       options: Seq[String]) {
     def toProto: PBContainerInfo =
@@ -45,7 +45,7 @@ object CommandInfo {
         .build()
   }
 
-  case class URI(
+  final case class URI(
       value: String,
       extract: Option[Boolean] = None,
       executable: Option[Boolean] = None) {

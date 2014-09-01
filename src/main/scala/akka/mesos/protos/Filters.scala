@@ -4,7 +4,7 @@ import org.apache.mesos.Protos
 
 import scala.concurrent.duration.Duration
 
-class Filters(refuse: Option[Duration]) {
+final class Filters(refuse: Option[Duration]) {
   def toProto: Protos.Filters = {
     val builder = Protos.Filters.newBuilder
 
