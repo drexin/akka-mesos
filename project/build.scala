@@ -6,8 +6,8 @@ import com.typesafe.sbt.SbtScalariform._
 import scalariform.formatter.preferences._
 
 object AkkaMesosBuild extends Build {
-  lazy val core = Project(
-    id = "core",
+  lazy val root = Project(
+    id = "akka-mesos",
     base = file("."),
     settings = baseSettings ++ PB.protobufSettings ++ Seq(
       libraryDependencies ++= Dependencies.core,
@@ -17,7 +17,7 @@ object AkkaMesosBuild extends Build {
 
   lazy val baseSettings = Defaults.defaultSettings ++ formatSettings ++ releaseSettings ++ Seq(
     version := "0.1.0",
-    organization := "akka.libprocess",
+    organization := "akka.mesos",
     scalaVersion := "2.11.2",
 
     scalacOptions in Compile ++= Seq(
@@ -36,7 +36,7 @@ object AkkaMesosBuild extends Build {
       .setPreference(MultilineScaladocCommentsStartOnFirstLine, false)
       .setPreference(PlaceScaladocAsterisksBeneathSecondAsterisk, true)
       .setPreference(PreserveDanglingCloseParenthesis, true)
-      .setPreference(CompactControlReadability, true) //MV: should be false!
+      .setPreference(CompactControlReadability, false)
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(PreserveSpaceBeforeArguments, true)
       .setPreference(SpaceBeforeColon, false)

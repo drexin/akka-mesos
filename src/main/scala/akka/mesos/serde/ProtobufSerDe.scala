@@ -37,8 +37,8 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   }
 
   val constructorMapping: Map[String, Array[Byte] => MessageLite] = Map(
-    "mesos.internal.FrameworkRegisteredMessage" -> { FrameworkRegisteredMessage.parseFrom(_) },
-    "mesos.internal.ResourceOffersMessage" -> { ResourceOffersMessage.parseFrom(_) }
+    "mesos.internal.FrameworkRegisteredMessage" -> FrameworkRegisteredMessage.parseFrom,
+    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage.parseFrom
   )
 
   val typeMapping: Map[Class[_], String] = Map(
