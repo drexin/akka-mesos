@@ -1,12 +1,16 @@
 package akka.mesos.serde
 
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
-import com.typesafe.config.Config
-import scala.util.{ Success, Failure, Try }
+import akka.mesos.protos.ProtoWrapper
+import akka.mesos.protos.internal.{ ResourceOffersMessage, FrameworkRegisteredMessage }
 import com.google.protobuf.MessageLite
-import mesos.internal.Messages._
+import com.typesafe.config.Config
+import mesos.internal.Messages
+
+import scala.util.{ Failure, Success, Try }
 
 class ProtobufSerDe(config: Config) extends MessageSerDe {
+
   def deserialize(message: TransportMessage): Try[AnyRef] = {
     constructorMapping.get(message.messageName) map { ctor =>
       try {
@@ -14,8 +18,6 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
         Success(msg)
       } catch {
         case e: Exception =>
-          println(e.getMessage)
-          e.printStackTrace
           Failure(e)
       }
     } getOrElse {
@@ -35,14 +37,14 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
       Failure(new ClassCastException)
   }
 
-  val constructorMapping: Map[String, Array[Byte] => MessageLite] = Map(
-    "mesos.internal.FrameworkRegisteredMessage" -> FrameworkRegisteredMessage.parseFrom,
-    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage.parseFrom
+  val constructorMapping: Map[String, Array[Byte] => ProtoWrapper[_ <: MessageLite]] = Map(
+    "mesos.internal.FrameworkRegisteredMessage" -> FrameworkRegisteredMessage.fromBytes,
+    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage.fromBytes
   )
 
   val typeMapping: Map[Class[_], String] = Map(
-    classOf[RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
-    classOf[RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage"
+    classOf[Messages.RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
+    classOf[Messages.RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage"
   )
 }
 

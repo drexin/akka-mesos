@@ -1,19 +1,28 @@
 package akka.mesos.protos
 
-import org.apache.mesos.Protos.{ Attribute => PBAttribute, Value }
+import org.apache.mesos.Protos
 
-sealed trait Attribute {
-  def toProto: PBAttribute
+sealed trait Attribute extends ProtoWrapper[Protos.Attribute] {
+  def toProto: Protos.Attribute
+}
+
+object Attribute {
+  def apply(proto: Protos.Attribute) = proto.getType match {
+    case Protos.Value.Type.TEXT =>
+      TextAttribute(proto.getName, proto.getText.getValue)
+
+    case _ => ???
+  }
 }
 
 final case class TextAttribute(name: String, text: String) extends Attribute {
-  def toProto: PBAttribute =
-    PBAttribute
+  def toProto: Protos.Attribute =
+    Protos.Attribute
       .newBuilder
       .setName(name)
-      .setType(Value.Type.TEXT)
+      .setType(Protos.Value.Type.TEXT)
       .setText(
-        Value.Text
+        Protos.Value.Text
           .newBuilder
           .setValue(text)
           .build())

@@ -1,26 +1,58 @@
 package akka.mesos.protos
 
-import org.apache.mesos.Protos.{ Resource => PBResource, Value => PBValue }
-import PBValue.{ Scalar => PBScalar, Range => PBRange, Ranges => PBRanges, Set => PBSet }
+import org.apache.mesos.Protos
+import org.apache.mesos.Protos.{ Value => PBValue }
 import scala.collection.JavaConverters._
+import scala.collection.immutable.NumericRange
 
-sealed trait Resource {
+sealed trait Resource extends ProtoWrapper[Protos.Resource] {
   def tpe: ResourceType
   def role: Option[String]
 
-  def toProto: PBResource
+  def toProto: Protos.Resource
+}
+
+object Resource {
+  def apply(proto: Protos.Resource): Resource = {
+    val role = if (proto.hasRole) Some(proto.getRole) else None
+
+    proto.getType match {
+      case Protos.Value.Type.SCALAR =>
+        ScalarResource(
+          tpe = ResourceType(proto.getName),
+          value = proto.getScalar.getValue,
+          role = role
+        )
+
+      case Protos.Value.Type.RANGES =>
+        RangesResource(
+          tpe = ResourceType(proto.getName),
+          value = proto.getRanges.getRangeList.asScala.map(x => Range.Long(x.getBegin, x.getEnd, 1)),
+          role = role
+        )
+
+      case Protos.Value.Type.SET =>
+        SetResource(
+          tpe = ResourceType(proto.getName),
+          value = proto.getSet.getItemList.asScala,
+          role = role
+        )
+
+      case _ => ???
+    }
+  }
 }
 
 final case class ScalarResource(
     tpe: ResourceType,
     value: Double,
     role: Option[String] = None) extends Resource {
-  def toProto: PBResource = {
+  def toProto: Protos.Resource = {
     val builder =
-      PBResource
+      Protos.Resource
         .newBuilder
         .setName(tpe.toString)
-        .setScalar(PBScalar.newBuilder.setValue(value).build())
+        .setScalar(Protos.Value.Scalar.newBuilder.setValue(value).build())
         .setType(PBValue.Type.SCALAR)
 
     role.foreach(builder.setRole)
@@ -31,11 +63,11 @@ final case class ScalarResource(
 
 final case class RangesResource(
     tpe: ResourceType,
-    value: Seq[Range],
+    value: Seq[NumericRange[Long]],
     role: Option[String] = None) extends Resource {
-  def toProto: PBResource = {
+  def toProto: Protos.Resource = {
     val builder =
-      PBResource
+      Protos.Resource
         .newBuilder
         .setName(tpe.toString)
         .setRanges(ranges)
@@ -47,11 +79,11 @@ final case class RangesResource(
   }
 
   private def ranges = {
-    PBRanges
+    Protos.Value.Ranges
       .newBuilder
       .addAllRange(
         value.map { range =>
-          PBRange
+          Protos.Value.Range
             .newBuilder
             .setBegin(range.start)
             .setEnd(range.end)
@@ -66,12 +98,12 @@ final case class SetResource(
     tpe: ResourceType,
     value: Seq[String],
     role: Option[String] = None) extends Resource {
-  def toProto: PBResource = {
+  def toProto: Protos.Resource = {
     val builder =
-      PBResource
+      Protos.Resource
         .newBuilder
         .setName(tpe.toString)
-        .setSet(PBSet.newBuilder.addAllItem(value.asJava).build())
+        .setSet(Protos.Value.Set.newBuilder.addAllItem(value.asJava).build())
         .setType(PBValue.Type.SCALAR)
 
     role.foreach(builder.setRole)
