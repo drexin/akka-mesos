@@ -1,6 +1,6 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ExecutorInfo, SlaveID, SlaveInfo}
+import akka.mesos.protos.{ ExecutorInfo, SlaveID, SlaveInfo }
 import mesos.internal.Messages
 
 import scala.collection.JavaConverters._

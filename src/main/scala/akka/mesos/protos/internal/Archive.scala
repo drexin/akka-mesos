@@ -5,8 +5,12 @@ import mesos.internal.Messages
 
 import scala.collection.JavaConverters._
 
-final case class Archive {
-
+final case class Archive(frameworks: Seq[Archive.Framework]) {
+  def toProto: Messages.Archive =
+    Messages.Archive
+      .newBuilder
+      .addAllFrameworks(frameworks.map(_.toProto).asJava)
+      .build()
 }
 
 object Archive {

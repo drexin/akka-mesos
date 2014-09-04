@@ -12,8 +12,7 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
       try {
         val msg = ctor(message.data)
         Success(msg)
-      }
-      catch {
+      } catch {
         case e: Exception =>
           println(e.getMessage)
           e.printStackTrace

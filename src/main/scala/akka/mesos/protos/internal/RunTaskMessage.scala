@@ -1,6 +1,6 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{TaskInfo, FrameworkInfo, FrameworkID}
+import akka.mesos.protos.{ TaskInfo, FrameworkInfo, FrameworkID }
 import mesos.internal.Messages
 
 /*

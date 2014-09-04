@@ -1,6 +1,6 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{FrameworkID, MasterInfo}
+import akka.mesos.protos.{ FrameworkID, MasterInfo }
 import mesos.internal.Messages
 
 final case class FrameworkReregisteredMessage(

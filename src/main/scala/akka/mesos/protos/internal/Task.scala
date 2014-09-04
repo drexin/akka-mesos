@@ -11,7 +11,7 @@ final case class Task(
     slaveId: SlaveID,
     state: TaskState,
     executorId: Option[ExecutorID] = None,
-    resources: Seq[Resource] = None,
+    resources: Seq[Resource] = Nil,
     statuses: Seq[TaskStatus] = Nil) {
   def toProto: Messages.Task = {
     val builder = Messages.Task

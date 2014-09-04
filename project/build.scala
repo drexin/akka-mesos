@@ -16,8 +16,8 @@ object AkkaMesosBuild extends Build {
   )
 
   lazy val baseSettings = Defaults.defaultSettings ++ formatSettings ++ releaseSettings ++ Seq(
-    version := "0.1.0",
-    organization := "akka.mesos",
+    version := "0.1.0-SNAPSHOT",
+    organization := "io.mesosphere",
     scalaVersion := "2.11.2",
 
     scalacOptions in Compile ++= Seq(

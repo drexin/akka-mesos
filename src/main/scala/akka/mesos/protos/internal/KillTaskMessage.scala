@@ -1,6 +1,6 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{TaskID, FrameworkID}
+import akka.mesos.protos.{ TaskID, FrameworkID }
 import mesos.internal.Messages
 
 final case class KillTaskMessage(

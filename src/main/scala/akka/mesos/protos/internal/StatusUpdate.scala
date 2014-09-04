@@ -1,6 +1,6 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{SlaveID, ExecutorID, TaskStatus, FrameworkID}
+import akka.mesos.protos.{ SlaveID, ExecutorID, TaskStatus, FrameworkID }
 import akka.util.ByteString
 import com.google.protobuf.{ ByteString => PBByteString }
 import mesos.internal.Messages

@@ -1,10 +1,9 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{FrameworkID, ExecutorID, SlaveID}
+import akka.mesos.protos.{ FrameworkID, ExecutorID, SlaveID }
 import akka.util.ByteString
 import com.google.protobuf.{ ByteString => PBByteString }
 import mesos.internal.Messages
-
 
 final case class ExecutorToFrameworkMessage(
     slaveId: SlaveID,

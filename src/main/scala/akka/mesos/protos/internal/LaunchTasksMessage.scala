@@ -1,6 +1,6 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{OfferID, Filters, TaskInfo, FrameworkID}
+import akka.mesos.protos.{ OfferID, Filters, TaskInfo, FrameworkID }
 import mesos.internal.Messages
 
 import scala.collection.JavaConverters._
