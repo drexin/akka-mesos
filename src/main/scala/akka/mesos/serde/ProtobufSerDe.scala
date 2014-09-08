@@ -1,8 +1,8 @@
 package akka.mesos.serde
 
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
-import akka.mesos.protos.ProtoWrapper
-import akka.mesos.protos.internal.{ ResourceOffersMessage, FrameworkRegisteredMessage }
+import akka.mesos.protos.{ DeclineResourceOfferMessage, ProtoWrapper }
+import akka.mesos.protos.internal.{ RegisterFrameworkMessage, RescindResourceOfferMessage, ResourceOffersMessage, FrameworkRegisteredMessage }
 import com.google.protobuf.MessageLite
 import com.typesafe.config.Config
 import mesos.internal.Messages
@@ -26,9 +26,9 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   }
 
   def serialize(obj: AnyRef): Try[TransportMessage] = obj match {
-    case msg: MessageLite =>
+    case msg: ProtoWrapper[_] =>
       typeMapping.get(msg.getClass) map { name =>
-        Success(TransportMessage(name, msg.toByteArray))
+        Success(TransportMessage(name, msg.toProto.toByteArray))
       } getOrElse {
         Failure(new NoSuchElementException)
       }
@@ -43,8 +43,8 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   )
 
   val typeMapping: Map[Class[_], String] = Map(
-    classOf[Messages.RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
-    classOf[Messages.RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage"
+    classOf[RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
+    classOf[RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage",
+    classOf[DeclineResourceOfferMessage] -> "mesos.internal.LaunchTasksMessage"
   )
 }
-

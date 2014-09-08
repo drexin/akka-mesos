@@ -1,12 +1,13 @@
 package akka.mesos
 
-import akka.mesos.protos.FrameworkInfo
+import akka.mesos.protos.{ DeclineResourceOfferMessage, FrameworkID, FrameworkInfo }
 import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
 import akka.libprocess.{ LibProcess, PID, LibProcessMessage }
-import mesos.internal.Messages._
 import akka.libprocess.LibProcessManager._
 import akka.actor._
-import scala.collection.JavaConverters._
+import akka.mesos.protos.internal._
+
+import scala.util.control.NonFatal
 
 object Mesos extends ExtensionId[MesosExtension] with ExtensionIdProvider {
   override def lookup(): ExtensionId[_ <: Extension] = this
@@ -16,41 +17,36 @@ object Mesos extends ExtensionId[MesosExtension] with ExtensionIdProvider {
 }
 
 class MesosExtension(system: ExtendedActorSystem) extends Extension {
-  import system.dispatcher
 
-  def registerFramework(master: PID, framework: FrameworkInfo, schedulerProps: Props): ActorRef = {
+  def registerFramework(master: PID, framework: FrameworkInfo, schedulerProps: (String, FrameworkID) => Props): ActorRef = {
     system.actorOf(Props(classOf[MesosFramework], master, framework, schedulerProps))
   }
 }
 
-class MesosFramework(master: PID, framework: FrameworkInfo, schedulerProps: Props) extends Actor with Stash with ActorLogging {
+class MesosFramework(master: PID, framework: FrameworkInfo, schedulerProps: (String, FrameworkID) => Props) extends Actor with Stash with ActorLogging {
   import context.dispatcher
 
   var scheduler: ActorRef = _
 
   override def preStart(): Unit = {
     LibProcess(context.system).manager ! Register(framework.name, self)
-    scheduler = context.actorOf(schedulerProps)
   }
 
   override val supervisorStrategy = OneForOneStrategy() {
-    case e: Exception => SupervisorStrategy.Restart
+    case NonFatal(_) => SupervisorStrategy.Restart
   }
 
   def receive = {
     case Registered(framework.`name`) =>
       LibProcess(context.system).remoteRef(master) onSuccess {
         case ref =>
-          val msg = RegisterFrameworkMessage
-            .newBuilder()
-            .setFramework(framework.toProto)
-            .build()
-          // TODO: create LibProcessActorRef that only accepts `LibProcessMessage`
+          val msg = RegisterFrameworkMessage(framework)
           ref ! LibProcessMessage(framework.name, msg)
       }
 
-    case msg: FrameworkRegisteredMessage =>
-      log.info(s"Successfully registered framework '${msg.getFrameworkId.getValue}'")
+    case FrameworkRegisteredMessage(frameworkId, _) =>
+      log.info(s"Successfully registered framework '${frameworkId.value}'")
+      scheduler = context.actorOf(schedulerProps(framework.name, frameworkId))
       context.become(ready)
       unstashAll()
 
@@ -67,11 +63,17 @@ object Main extends App {
 
   val system = ActorSystem("Mesos")
 
-  Mesos(system).registerFramework(PID("127.0.0.1", 5050, "master"), FrameworkInfo("foo", "corpsi"), Props(classOf[SchedulerActor]))
+  Mesos(system).registerFramework(PID("127.0.0.1", 5050, "master"), FrameworkInfo("foo", "corpsi"), (frameworkName, frameworkId) => Props(classOf[SchedulerActor], frameworkName, frameworkId))
 }
 
-class SchedulerActor extends Actor with ActorLogging {
+class SchedulerActor(frameworkName: String, frameworkId: FrameworkID) extends Actor with ActorLogging {
   def receive = {
+    case offers: ResourceOffersMessage =>
+      offers.offers foreach { offer =>
+        log.info(s"Rescinding resource offer: ${offer.id} -- ${sender().path}")
+        sender() ! LibProcessMessage("foo", DeclineResourceOfferMessage(frameworkId, offer.id))
+      }
+
     case x => log.info(s"Received: $x")
   }
 }
