@@ -3,6 +3,7 @@ package akka.mesos.protos.internal
 import akka.mesos.protos.{ ProtoWrapper, Offer }
 import mesos.internal.Messages
 
+import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 
 final case class ResourceOffersMessage(
@@ -22,6 +23,6 @@ object ResourceOffersMessage {
 
   def apply(proto: Messages.ResourceOffersMessage): ResourceOffersMessage =
     ResourceOffersMessage(
-      offers = proto.getOffersList.asScala.map(Offer(_)),
-      pids = proto.getPidsList.asScala)
+      offers = proto.getOffersList.asScala.to[Seq].map(Offer(_)),
+      pids = proto.getPidsList.asScala.to[Seq])
 }

@@ -2,7 +2,7 @@ package akka.mesos.serde
 
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
 import akka.mesos.protos.{ DeclineResourceOfferMessage, ProtoWrapper }
-import akka.mesos.protos.internal.{ RegisterFrameworkMessage, RescindResourceOfferMessage, ResourceOffersMessage, FrameworkRegisteredMessage }
+import akka.mesos.protos.internal._
 import com.google.protobuf.MessageLite
 import com.typesafe.config.Config
 import mesos.internal.Messages
@@ -39,12 +39,14 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
 
   val constructorMapping: Map[String, Array[Byte] => ProtoWrapper[_ <: MessageLite]] = Map(
     "mesos.internal.FrameworkRegisteredMessage" -> FrameworkRegisteredMessage.fromBytes,
-    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage.fromBytes
+    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage.fromBytes,
+    "mesos.internal.StatusUpdateMessage" -> StatusUpdateMessage.fromBytes
   )
 
   val typeMapping: Map[Class[_], String] = Map(
     classOf[RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
     classOf[RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage",
-    classOf[DeclineResourceOfferMessage] -> "mesos.internal.LaunchTasksMessage"
+    classOf[DeclineResourceOfferMessage] -> "mesos.internal.LaunchTasksMessage",
+    classOf[LaunchTasksMessage] -> "mesos.internal.LaunchTasksMessage"
   )
 }

@@ -1,36 +1,48 @@
 package akka.mesos.protos
 
-import org.apache.mesos.Protos.{ TaskState => PBTaskState }
+import org.apache.mesos.Protos
 
 sealed trait TaskState {
-  def toProto: PBTaskState
+  def toProto: Protos.TaskState
 }
 
-case object TaskStaging extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_STAGING
-}
+object TaskState {
 
-case object TaskStarting extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_STARTING
-}
+  case object TaskStaging extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_STAGING
+  }
 
-case object TaskRunning extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_RUNNING
-}
+  case object TaskStarting extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_STARTING
+  }
 
-case object TaskFinished extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_FINISHED
-}
+  case object TaskRunning extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_RUNNING
+  }
 
-case object TaskFailed extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_FAILED
-}
+  case object TaskFinished extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_FINISHED
+  }
 
-case object TaskKilled extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_KILLED
-}
+  case object TaskFailed extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_FAILED
+  }
 
-case object TaskLost extends TaskState {
-  def toProto: PBTaskState = PBTaskState.TASK_LOST
-}
+  case object TaskKilled extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_KILLED
+  }
 
+  case object TaskLost extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_LOST
+  }
+
+  def apply(state: Protos.TaskState): TaskState = state match {
+    case Protos.TaskState.TASK_STAGING  => TaskStaging
+    case Protos.TaskState.TASK_STARTING => TaskStarting
+    case Protos.TaskState.TASK_RUNNING  => TaskRunning
+    case Protos.TaskState.TASK_FINISHED => TaskFinished
+    case Protos.TaskState.TASK_FAILED   => TaskFailed
+    case Protos.TaskState.TASK_KILLED   => TaskKilled
+    case Protos.TaskState.TASK_LOST     => TaskLost
+  }
+}

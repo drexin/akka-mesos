@@ -1,26 +1,27 @@
 package akka.mesos.protos
 
 import akka.util.ByteString
-import org.apache.mesos.Protos.{ TaskInfo => PBTaskInfo }
+import org.apache.mesos.Protos
 import com.google.protobuf.{ ByteString => PBByteString }
+import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 
 final case class TaskInfo(
     name: String,
-    taskID: TaskID,
-    slaveID: SlaveID,
+    taskId: TaskID,
+    slaveId: SlaveID,
     resources: Seq[Resource],
-    executor: Option[ExecutorInfo],
-    command: Option[CommandInfo],
-    data: Option[ByteString],
-    healthCheck: Option[HealthCheck]) {
-  def toProto: PBTaskInfo = {
+    executor: Option[ExecutorInfo] = None,
+    command: Option[CommandInfo] = None,
+    data: Option[ByteString] = None,
+    healthCheck: Option[HealthCheck] = None) extends ProtoWrapper[Protos.TaskInfo] {
+  def toProto: Protos.TaskInfo = {
     val builder =
-      PBTaskInfo
+      Protos.TaskInfo
         .newBuilder
         .setName(name)
-        .setTaskId(taskID.toProto)
-        .setSlaveId(slaveID.toProto)
+        .setTaskId(taskId.toProto)
+        .setSlaveId(slaveId.toProto)
         .addAllResources(resources.map(_.toProto).asJava)
 
     executor.foreach(e => builder.setExecutor(e.toProto))
@@ -32,3 +33,21 @@ final case class TaskInfo(
   }
 }
 
+object TaskInfo {
+  def apply(proto: Protos.TaskInfo): TaskInfo = {
+    val executor = if (proto.hasExecutor) Some(ExecutorInfo(proto.getExecutor)) else None
+    val command = if (proto.hasCommand) Some(CommandInfo(proto.getCommand)) else None
+    val data = if (proto.hasData) Some(ByteString(proto.getData.toByteArray)) else None
+    val healthCheck = if (proto.hasHealthCheck) Some(HealthCheck(proto.getHealthCheck)) else None
+
+    TaskInfo(
+      proto.getName,
+      TaskID(proto.getTaskId),
+      SlaveID(proto.getSlaveId),
+      proto.getResourcesList.asScala.to[Seq].map(Resource(_)),
+      executor,
+      command,
+      data,
+      healthCheck)
+  }
+}

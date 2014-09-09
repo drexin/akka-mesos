@@ -1,5 +1,7 @@
 package akka.mesos.protos
 
+import java.util.concurrent.TimeUnit
+
 import org.apache.mesos.Protos
 import org.apache.mesos.Protos.{ FrameworkInfo => PBFrameworkInfo }
 import scala.concurrent.duration._
@@ -35,7 +37,7 @@ object FrameworkInfo {
 
   def apply(proto: Protos.FrameworkInfo): FrameworkInfo = {
     val id = if (proto.hasId) Some(FrameworkID(proto.getId)) else None
-    val failoverTimeout = if (proto.hasFailoverTimeout) Some(DurationDouble(proto.getFailoverTimeout).millis) else None
+    val failoverTimeout = if (proto.hasFailoverTimeout) Some(Duration(proto.getFailoverTimeout, TimeUnit.SECONDS)) else None
     val checkpoint = if (proto.hasCheckpoint) Some(proto.getCheckpoint) else None
     val role = if (proto.hasRole) Some(proto.getRole) else None
     val hostname = if (proto.hasHostname) Some(proto.getHostname) else None
