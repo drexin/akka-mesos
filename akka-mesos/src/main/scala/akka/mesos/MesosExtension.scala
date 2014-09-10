@@ -4,7 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor._
 import akka.libprocess.LibProcessManager._
-import akka.libprocess.{ LibProcess, LibProcessMessage, PID }
+import akka.libprocess.{ RemoteRefRetrievalException, LibProcess, LibProcessMessage, PID }
+import akka.mesos.MesosFramework.{ MasterRef, MasterDisconnected }
 import akka.mesos.protos._
 import akka.mesos.protos.internal._
 import akka.pattern.pipe
@@ -33,7 +34,11 @@ class MesosFramework(master: PID, framework: FrameworkInfo, schedulerCreator: Sc
   import akka.mesos.MesosFramework._
   import context.dispatcher
 
-  var scheduler: ActorRef = _
+  val connectionRetryDelay = context.system.settings.config.getDuration("akka.libprocess.retry-delay", TimeUnit.MILLISECONDS).millis
+
+  var schedulerRef: ActorRef = _
+  var masterRef: ActorRef = _
+  var frameworkId: Option[FrameworkID] = None
 
   override def preStart(): Unit = {
     LibProcess(context.system).manager ! Register(framework.name, self)
@@ -48,23 +53,74 @@ class MesosFramework(master: PID, framework: FrameworkInfo, schedulerCreator: Sc
       LibProcess(context.system).remoteRef(master).map(MasterRef) pipeTo self
 
     case MasterRef(ref) =>
+      masterRef = ref
+      context.watch(masterRef)
       val msg = RegisterFrameworkMessage(framework)
-      ref ! LibProcessMessage(framework.name, msg)
+      masterRef ! LibProcessMessage(framework.name, msg)
       val timeout: Timeout = context.system.settings.config.getDuration("akka.libprocess.timeout", TimeUnit.MILLISECONDS).millis
-      scheduler = context.actorOf(Props(classOf[SchedulerActor], framework, self, ref, timeout, schedulerCreator))
+      schedulerRef = context.actorOf(Props(classOf[SchedulerActor], framework, self, ref, timeout, schedulerCreator))
       context.become(ready)
       unstashAll()
+
+    case Status.Failure(e: RemoteRefRetrievalException) =>
+      log.error(e, s"Could not retrieve reference to mesos master. Trying again in ${connectionRetryDelay.toMillis}ms.")
+      context.system.scheduler.scheduleOnce(connectionRetryDelay) {
+        LibProcess(context.system).remoteRef(master).map(MasterRef) pipeTo self
+      }
 
     case _ => stash()
   }
 
   def ready: Receive = {
-    case x => scheduler forward x
+    case Terminated(ref) if ref == masterRef =>
+      context.unwatch(ref)
+      schedulerRef ! MasterDisconnected
+      scheduleReconnect()
+
+      context.become(disconnected)
+
+    case msg @ FrameworkRegisteredMessage(id, _) =>
+      frameworkId = Some(id)
+      schedulerRef forward msg
+
+    case msg @ FrameworkReregisteredMessage(id, _) =>
+      frameworkId = Some(id)
+      schedulerRef forward msg
+
+    case x: ProtoWrapper[_] => schedulerRef forward x
+  }
+
+  def disconnected: Receive = {
+    case Reconnect(pid) =>
+      LibProcess(context.system).remoteRef(master).map(MasterRef) pipeTo self
+
+    case msg @ MasterRef(ref) =>
+      context.watch(ref)
+      masterRef = ref
+      ref ! LibProcessMessage(framework.name, ReregisterFrameworkMessage(frameworkInfo = framework.copy(id = frameworkId), failover = false))
+      schedulerRef ! msg
+      context.become(ready)
+      unstashAll()
+
+    case Status.Failure(e) =>
+      log.error(e, "Failed to reconnect to master. Trying again in ${connectionRetryDelay.toMillis}ms.")
+      scheduleReconnect()
+
+    case _ => stash()
+  }
+
+  def scheduleReconnect(): Unit = {
+    context.system.scheduler.scheduleOnce(
+      connectionRetryDelay,
+      self,
+      Reconnect(master))
   }
 }
 
 object MesosFramework {
-  case class MasterRef(ref: ActorRef)
+  final case class MasterRef(ref: ActorRef)
+  final case class Reconnect(pid: PID)
+  case object MasterDisconnected
 }
 
 class SchedulerActor(
@@ -72,21 +128,21 @@ class SchedulerActor(
     framework: ActorRef,
     master: ActorRef,
     timeout: Timeout,
-    schedulerCreator: SchedulerDriver => Scheduler) extends Actor with ActorLogging {
+    schedulerCreator: SchedulerDriver => Scheduler) extends Actor with ActorLogging with Stash {
 
   var scheduler: Scheduler = _
+  var driver: SchedulerDriver = _
 
   def receive = {
     case FrameworkRegisteredMessage(frameworkId, masterInfo) =>
-      scheduler = schedulerCreator(
-        new SchedulerDriver(
-          frameworkInfo,
-          frameworkId,
-          framework,
-          master)(context.dispatcher, timeout))
+      driver = new SchedulerDriver(frameworkInfo, frameworkId, framework, master)(context.dispatcher, timeout)
+      scheduler = schedulerCreator(driver)
 
       scheduler.registered(frameworkId, masterInfo)
       context.become(ready)
+      unstashAll()
+
+    case _ => stash()
   }
 
   def ready: Receive = {
@@ -100,14 +156,30 @@ class SchedulerActor(
       scheduler.statusUpdate(status)
 
       for (slaveId <- slaveIdOpt) {
-        sender ! LibProcessMessage(frameworkInfo.name, StatusUpdateAcknowledgementMessage(slaveId, frameworkId, status.taskId, uuid))
+        sender() ! LibProcessMessage(frameworkInfo.name, StatusUpdateAcknowledgementMessage(slaveId, frameworkId, status.taskId, uuid))
       }
 
     case ExecutorToFrameworkMessage(slaveId, _, executorId, data) =>
       scheduler.frameworkMessage(executorId, slaveId, data)
 
     case LostSlaveMessage(slaveId) => scheduler.slaveLost(slaveId)
-    case x                         => log.warning(s"Received unexpected message: $x")
+    case MasterDisconnected =>
+      scheduler.disconnected()
+      context.become(disconnected)
+
+    case FrameworkRegisteredMessage(frameworkId, masterInfo) => scheduler.registered(frameworkId, masterInfo)
+    case FrameworkReregisteredMessage(frameworkId, masterInfo) => scheduler.reregistered(masterInfo)
+
+    case x => log.warning(s"Received unexpected message: $x")
+  }
+
+  def disconnected: Receive = {
+    case MasterRef(ref) =>
+      driver.master = ref
+      context.become(ready)
+      unstashAll()
+
+    case _ => stash()
   }
 }
 

@@ -7,7 +7,7 @@ package akka.libprocess
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.libprocess.LibProcessManager.GetRemoteRef
+import akka.libprocess.LibProcessManager.{ RemoteRef, GetRemoteRef }
 import akka.pattern.ask
 import akka.util.Timeout
 
@@ -22,11 +22,13 @@ object LibProcess extends ExtensionId[LibProcessExtension] with ExtensionIdProvi
 }
 
 class LibProcessExtension(system: ExtendedActorSystem) extends Extension {
+  import system.dispatcher
+
   val config = system.settings.config.getConfig("akka.libprocess")
-  val manager = system.actorOf(Props(classOf[LibProcessManager], new LibProcessConfig(config)))
+  val manager = system.actorOf(Props(classOf[LibProcessManager], new LibProcessConfig(config)), "libprocess")
 
   def remoteRef(pid: PID): Future[ActorRef] = {
     implicit val timeout: Timeout = config.getDuration("timeout", TimeUnit.MILLISECONDS).millis
-    (manager ? GetRemoteRef(pid)).mapTo[ActorRef]
+    (manager ? GetRemoteRef(pid)).mapTo[RemoteRef].map(_.ref)
   }
 }

@@ -27,7 +27,7 @@ final class SchedulerDriver private[mesos] (
     frameworkInfo: FrameworkInfo,
     frameworkId: FrameworkID,
     framework: ActorRef,
-    master: ActorRef)(implicit ec: ExecutionContext, timeout: Timeout) {
+    private[mesos] var master: ActorRef)(implicit ec: ExecutionContext, timeout: Timeout) {
 
   def stop(failover: Boolean): Unit = {
     val res = if (!failover) {

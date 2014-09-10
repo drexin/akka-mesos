@@ -7,14 +7,17 @@ package akka.libprocess
 import java.net.InetSocketAddress
 
 import akka.actor._
-import akka.io.Tcp.{ CommandFailed, Connected, Write }
+import akka.io.Tcp._
 import akka.io.{ IO, Tcp }
+import akka.libprocess.LibProcessManager.RemoteRef
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
 import akka.util.ByteString
 
 import scala.util.{ Failure, Success }
 
-private[libprocess] final class LibProcessRemoteActor(name: String, address: InetSocketAddress, localAddress: InetSocketAddress, messageSerDe: MessageSerDe) extends Actor with ActorLogging with Stash {
+class RemoteRefRetrievalException(msg: String) extends Exception(msg)
+
+private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef], name: String, address: InetSocketAddress, localAddress: InetSocketAddress, messageSerDe: MessageSerDe) extends Actor with ActorLogging with Stash {
   import context.system
 
   var connection: ActorRef = _
@@ -33,11 +36,13 @@ private[libprocess] final class LibProcessRemoteActor(name: String, address: Ine
       log.info(s"Connected to remote libprocess actor at $remote.")
       connection = sender()
       connection ! Tcp.Register(self)
+      receiver.foreach(_ ! RemoteRef(self))
       context.become(ready)
       unstashAll()
 
     case CommandFailed(cmd: Tcp.Connect) =>
       log.error(s"Failed to connect to remote libprocess at ${cmd.remoteAddress}.")
+      receiver.foreach(_ ! Status.Failure(new RemoteRefRetrievalException(s"Could not connect to remote node at ${cmd.remoteAddress}.")))
       context.stop(self)
 
     case x => stash()
@@ -55,11 +60,19 @@ private[libprocess] final class LibProcessRemoteActor(name: String, address: Ine
             )
           )
 
-        case Failure(e) => log.error(e, s"Could not send message")
+        case Failure(e) => log.error(e, s"Could not send message $msg.")
       }
 
     case CommandFailed(cmd: Tcp.Write) =>
       log.error(s"Failed to send message to remote actor '$name' at $address.")
+
+    case PeerClosed =>
+      log.warning("Connection closed by peer. Shutting down actor.")
+      context.stop(self)
+
+    case ErrorClosed(cause) =>
+      log.error(s"Connection closed with an error: $cause. Shutting down actor.")
+      context.stop(self)
   }
 
   def pidWithId(id: String): PID = {

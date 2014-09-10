@@ -13,6 +13,8 @@ import akka.actor.SupervisorStrategy.Restart
 import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit
 
+import scala.util.control.NonFatal
+
 class LibProcessConfig(config: Config) {
   val port: Int = config.getInt("port")
   val address: String = config.getString("address")
@@ -40,7 +42,7 @@ class LibProcessManager(config: LibProcessConfig) extends Actor with ActorLoggin
   var localAddress: InetSocketAddress = _
 
   override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy(config.connectionRetries, config.retryTimeout) {
-    case _ => Restart
+    case NonFatal(_) => Restart
   }
 
   def receive = {
@@ -68,30 +70,26 @@ class LibProcessManager(config: LibProcessConfig) extends Actor with ActorLoggin
     case LibProcessInternalMessage(pid, receiverName, msg) =>
       registry.get(receiverName) match {
         case Some(ref) =>
-          getRemoteRef(pid) foreach { remoteRef =>
+          retrieveRemoteRef(pid, None) foreach { remoteRef =>
             ref.tell(msg, remoteRef)
           }
 
         case None => log.warning(s"Received message for unregistered actor '$receiverName'.")
       }
 
-    case GetRemoteRef(pid) =>
-      getRemoteRef(pid) match {
-        case Some(remoteRef) => sender() ! remoteRef
-        case None            => sender() ! RetrievalFailed(pid)
-      }
-
+    case GetRemoteRef(pid) => retrieveRemoteRef(pid, Some(sender()))
     case Terminated(ref) =>
       remoteRefCache = remoteRefCache.filterNot(_._2 == ref)
+      context.unwatch(ref)
 
   }
 
-  def getRemoteRef(pid: PID): Option[ActorRef] = {
+  def retrieveRemoteRef(pid: PID, receiver: Option[ActorRef]): Option[ActorRef] = {
     remoteRefCache.get(pid) match {
       case Some(ref) => Some(ref)
       case None =>
         try {
-          val ref = context.actorOf(Props(classOf[LibProcessRemoteActor], pid.id, new InetSocketAddress(pid.ip, pid.port), localAddress, messageSerDe))
+          val ref = context.actorOf(Props(classOf[LibProcessRemoteActor], receiver, pid.id, new InetSocketAddress(pid.ip, pid.port), localAddress, messageSerDe))
           context.watch(ref)
           remoteRefCache += pid -> ref
           log.info(remoteRefCache.toString())
@@ -117,15 +115,17 @@ class LibProcessManager(config: LibProcessConfig) extends Actor with ActorLoggin
 }
 
 object LibProcessManager {
-  case class Register(name: String, ref: ActorRef)
-  case class Unregister(name: String)
-  case class LibProcessInternalMessage(sender: PID, receiverName: String, msg: AnyRef)
-  case class GetRemoteRef(pid: PID)
+  final case class Register(name: String, ref: ActorRef)
+  final case class Unregister(name: String)
+  final case class LibProcessInternalMessage(sender: PID, receiverName: String, msg: AnyRef)
+  final case class GetRemoteRef(pid: PID)
 
-  case class RegistrationFailed(name: String)
-  case class Registered(name: String)
-  case class Unregistered(name: String)
-  case class RetrievalFailed(pid: PID)
+  final case class RegistrationFailed(name: String)
+  final case class Registered(name: String)
+  final case class Unregistered(name: String)
+  final case class RetrievalFailed(pid: PID)
+
+  final case class RemoteRef(ref: ActorRef)
 }
 
-case class LibProcessMessage(sender: String, msg: AnyRef)
+final case class LibProcessMessage(sender: String, msg: AnyRef)
