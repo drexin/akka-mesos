@@ -96,7 +96,13 @@ class SchedulerActor(
       scheduler.executorLost(executorId, slaveId, status)
 
     case RescindResourceOfferMessage(offerId) => scheduler.offerRescinded(offerId)
-    case StatusUpdateMessage(statusUpdate, _) => scheduler.statusUpdate(statusUpdate.status)
+    case StatusUpdateMessage(StatusUpdate(frameworkId, status, _, uuid, _, slaveIdOpt), _) =>
+      scheduler.statusUpdate(status)
+
+      for (slaveId <- slaveIdOpt) {
+        sender ! LibProcessMessage(frameworkInfo.name, StatusUpdateAcknowledgementMessage(slaveId, frameworkId, status.taskId, uuid))
+      }
+
     case ExecutorToFrameworkMessage(slaveId, _, executorId, data) =>
       scheduler.frameworkMessage(executorId, slaveId, data)
 
@@ -127,7 +133,7 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
   }
 
   override def slaveLost(slaveId: SlaveID): Unit = {
-
+    log.info(s"Lost slave: ${slaveId.value}")
   }
 
   override def error(message: String): Unit = {}
@@ -148,8 +154,7 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
         offer.resources.filter(_.tpe != ResourceType.PORTS),
         command = Some(
           CommandInfo(
-            value = "sleep 1",
-            user = Some("root")
+            value = "sleep 1"
           )
         )
       )
@@ -159,7 +164,9 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
     }
   }
 
-  override def executorLost(executorId: ExecutorID, slaveId: SlaveID, status: Int): Unit = {}
+  override def executorLost(executorId: ExecutorID, slaveId: SlaveID, status: Int): Unit = {
+    log.info(s"Lost executor: ${executorId.value}")
+  }
 }
 
 object Main extends App {
@@ -169,5 +176,5 @@ object Main extends App {
 
   val system = ActorSystem("Mesos", config)
 
-  Mesos(system).registerFramework(PID("192.168.178.23", 5050, "master"), FrameworkInfo("foo", "corpsi"), driver => new MyScheduler(driver))
+  Mesos(system).registerFramework(PID("127.0.0.1", 5050, "master"), FrameworkInfo("foo", "corpsi"), driver => new MyScheduler(driver))
 }

@@ -64,5 +64,5 @@ mongoDB/
 redis/
 beanstalk/
 .scalastyle
-src/main/java/mesos/internal/Messages.java
-src/main/java/org/apache/mesos/Protos.java
+akka-mesos/src/main/java/mesos/internal/Messages.java
+akka-mesos/src/main/java/org/apache/mesos/Protos.java

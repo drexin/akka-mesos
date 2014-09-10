@@ -40,13 +40,19 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   val constructorMapping: Map[String, Array[Byte] => ProtoWrapper[_ <: MessageLite]] = Map(
     "mesos.internal.FrameworkRegisteredMessage" -> FrameworkRegisteredMessage.fromBytes,
     "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage.fromBytes,
-    "mesos.internal.StatusUpdateMessage" -> StatusUpdateMessage.fromBytes
+    "mesos.internal.StatusUpdateMessage" -> StatusUpdateMessage.fromBytes,
+    "mesos.internal.FrameworkErrorMessage" -> FrameworkErrorMessage.fromBytes,
+    "mesos.internal.ExitedExecutorMessage" -> ExitedExecutorMessage.fromBytes,
+    "mesos.internal.RescindResourceOfferMessage" -> RescindResourceOfferMessage.fromBytes,
+    "mesos.internal.ExecutorToFrameworkMessage" -> ExecutorToFrameworkMessage.fromBytes,
+    "mesos.internal.LostSlaveMessage" -> LostSlaveMessage.fromBytes
   )
 
   val typeMapping: Map[Class[_], String] = Map(
     classOf[RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
     classOf[RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage",
     classOf[DeclineResourceOfferMessage] -> "mesos.internal.LaunchTasksMessage",
-    classOf[LaunchTasksMessage] -> "mesos.internal.LaunchTasksMessage"
+    classOf[LaunchTasksMessage] -> "mesos.internal.LaunchTasksMessage",
+    classOf[StatusUpdateAcknowledgementMessage] -> "mesos.internal.StatusUpdateAcknowledgementMessage"
   )
 }

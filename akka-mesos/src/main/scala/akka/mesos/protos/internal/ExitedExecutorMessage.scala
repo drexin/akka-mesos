@@ -17,3 +17,15 @@ final case class ExitedExecutorMessage(
       .setStatus(status)
       .build()
 }
+
+object ExitedExecutorMessage {
+  def fromBytes(bytes: Array[Byte]): ExitedExecutorMessage =
+    ExitedExecutorMessage(Messages.ExitedExecutorMessage.parseFrom(bytes))
+
+  def apply(proto: Messages.ExitedExecutorMessage): ExitedExecutorMessage =
+    ExitedExecutorMessage(
+      SlaveID(proto.getSlaveId),
+      FrameworkID(proto.getFrameworkId),
+      ExecutorID(proto.getExecutorId),
+      proto.getStatus)
+}
