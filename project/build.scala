@@ -34,7 +34,6 @@ object AkkaMesosBuild extends Build {
 
 
   lazy val baseSettings = Defaults.defaultSettings ++ formatSettings ++ releaseSettings ++ Seq(
-    version := "0.1.0-SNAPSHOT",
     organization := "io.mesosphere.akka",
     scalaVersion := "2.11.2",
 
@@ -42,7 +41,8 @@ object AkkaMesosBuild extends Build {
       "-unchecked",
       "-deprecation",
       "-feature"
-    )
+    ),
+    parallelExecution in Test := false
   )
 
   lazy val formatSettings = scalariformSettings ++ Seq(

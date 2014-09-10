@@ -38,8 +38,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
 
       try {
         remoteSocket.isConnected should be(true)
-      }
-      finally {
+      } finally {
         remoteSocket.close()
         socket.close()
         system.stop(testRef)
@@ -81,8 +80,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
         val deserializedBody = new RawMessageSerDe().deserialize(TransportMessage("", body))
         deserializedBody.isSuccess should be(true)
         deserializedBody.get should be("Some string")
-      }
-      finally {
+      } finally {
         remoteSocket.close()
         socket.close()
         system.stop(testRef)
