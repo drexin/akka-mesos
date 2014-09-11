@@ -7,6 +7,7 @@ package akka.libprocess
 import java.net.InetSocketAddress
 
 import akka.actor._
+import akka.io.Tcp.SO.KeepAlive
 import akka.io.Tcp._
 import akka.io.{ IO, Tcp }
 import akka.libprocess.LibProcessManager.RemoteRef
@@ -23,7 +24,7 @@ private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef]
   var connection: ActorRef = _
 
   override def preStart(): Unit = {
-    IO(Tcp) ! Tcp.Connect(address)
+    IO(Tcp) ! Tcp.Connect(remoteAddress = address, options = KeepAlive(on = true) :: Nil)
   }
 
   override def postStop(): Unit = {
