@@ -90,11 +90,13 @@ class MesosFramework(master: PID, framework: FrameworkInfo, schedulerCreator: Sc
 
   def registering: Receive = {
     case Register if frameworkId.isEmpty =>
+      log.info(s"Trying to register with master @ $master")
       val msg = RegisterFrameworkMessage(framework)
       masterRef ! LibProcessMessage(framework.name, msg)
       scheduledTask = Some(context.system.scheduler.scheduleOnce(connectionRetryDelay, self, Register))
 
     case Register if frameworkId.isDefined =>
+      log.info(s"Trying to reregister with master @ $master")
       val msg = ReregisterFrameworkMessage(frameworkInfo = framework.copy(id = frameworkId), failover = false)
       masterRef ! LibProcessMessage(framework.name, msg)
       scheduledTask = Some(context.system.scheduler.scheduleOnce(connectionRetryDelay, self, Register))
