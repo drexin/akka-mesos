@@ -27,6 +27,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
       val testRef = TestActorRef[LibProcessRemoteActor](
         Props(
           classOf[LibProcessRemoteActor],
+          None,
           "test",
           new InetSocketAddress(socket.getInetAddress, socket.getLocalPort),
           new InetSocketAddress("127.0.0.1", 5051),
@@ -53,6 +54,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
       val testRef = TestActorRef[LibProcessRemoteActor](
         Props(
           classOf[LibProcessRemoteActor],
+          None,
           "test",
           new InetSocketAddress(socket.getInetAddress, socket.getLocalPort),
           new InetSocketAddress("127.0.0.1", 5051),
