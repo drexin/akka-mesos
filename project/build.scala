@@ -40,7 +40,11 @@ object AkkaMesosBuild extends Build {
     scalacOptions in Compile ++= Seq(
       "-unchecked",
       "-deprecation",
-      "-feature"
+      "-feature",
+      "-Xlint",
+      "-Xfatal-warnings",
+      "-Yno-adapted-args",
+      "-Ywarn-unused-import"
     ),
     parallelExecution in Test := false
   )
@@ -78,7 +82,7 @@ object Dependencies {
     slf4j             % "compile",
     akkaActor         % "compile",
     logback           % "compile",
-    sprayCan          % "compile",
+    akkaHttp          % "compile",
     Test.akkaTestKit  % "test",
     Test.scalaTest    % "test"
   )
@@ -87,20 +91,20 @@ object Dependencies {
 object Dependency {
   object V {
     val Akka        = "2.3.6"
+    val AkkaHttp    = "0.11"
     val Protobuf    = "2.5.0"
     val Config      = "1.2.1"
     val ScalaTest   = "2.1.3"
     val Slf4j       = "1.7.2"
     val Logback     = "1.0.9"
-    val Spray       = "1.3.1"
   }
 
-  val akkaActor   = "com.typesafe.akka"   %%  "akka-actor"      % V.Akka
-  val protobuf    = "com.google.protobuf" %   "protobuf-java"   % V.Protobuf
-  val config      = "com.typesafe"        %   "config"          % V.Config
-  val slf4j       = "org.slf4j"           %   "slf4j-api"       % V.Slf4j
-  val logback     = "ch.qos.logback"      %   "logback-classic" % V.Logback
-  val sprayCan    = "io.spray"            %%  "spray-can"       % V.Spray
+  val akkaActor   = "com.typesafe.akka"   %%  "akka-actor"                  % V.Akka
+  val protobuf    = "com.google.protobuf" %   "protobuf-java"               % V.Protobuf
+  val config      = "com.typesafe"        %   "config"                      % V.Config
+  val slf4j       = "org.slf4j"           %   "slf4j-api"                   % V.Slf4j
+  val logback     = "ch.qos.logback"      %   "logback-classic"             % V.Logback
+  val akkaHttp    = "com.typesafe.akka"   %%  "akka-http-core-experimental" % V.AkkaHttp
 
   object Test {
     val akkaTestKit = "com.typesafe.akka" %% "akka-testkit"    % V.Akka
