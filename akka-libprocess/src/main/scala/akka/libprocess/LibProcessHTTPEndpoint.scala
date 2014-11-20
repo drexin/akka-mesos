@@ -56,13 +56,8 @@ private[libprocess] class LibProcessHTTPEndpoint(address: String, port: Int, mes
         val msgResult = messageSerDe.deserialize(TransportMessage(cls.toString, data))
 
         val pidResult = Try {
-          for {
-            id <- headers.find(_.lowercaseName == "x-mesos-id")
-            host <- headers.find(_.lowercaseName == "x-mesos-ip")
-            port <- headers.find(_.lowercaseName == "x-mesos-port")
-          } yield PID(host.value(), port.value().toInt, id.value())
-        }.map(_.get)
-
+          headers.find(_.lowercaseName == "libprocess-from").get.value
+        }.flatMap(PID.fromAddressString)
         val internalMessage = for {
           msg <- msgResult
           pid <- pidResult

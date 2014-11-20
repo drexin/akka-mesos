@@ -85,10 +85,7 @@ private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef]
     log.info(pid.toAddressString)
 
     builder append ByteString(s"POST /master/$msgName HTTP/1.1\r\n")
-    builder append ByteString(s"User-Agent: libprocess/${pid.toAddressString}\r\n")
-    builder append ByteString(s"X-Mesos-Id: ${pid.id}\r\n")
-    builder append ByteString(s"X-Mesos-Ip: ${pid.ip}\r\n")
-    builder append ByteString(s"X-Mesos-Port: ${pid.port}\r\n")
+    builder append ByteString(s"Libprocess-From: libprocess/${pid.toAddressString}\r\n")
     builder append ByteString("Connection: Keep-Alive\r\n")
     builder append ByteString(s"Content-Length: ${data.size}\r\n")
     builder append ByteString("\r\n")
