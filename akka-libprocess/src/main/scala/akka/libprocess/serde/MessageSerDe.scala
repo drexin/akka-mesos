@@ -4,6 +4,8 @@
 
 package akka.libprocess.serde
 
+import akka.util.ByteString
+
 import scala.util.Try
 
 trait MessageSerDe {
@@ -11,4 +13,4 @@ trait MessageSerDe {
   def serialize(obj: AnyRef): Try[TransportMessage]
 }
 
-case class TransportMessage(messageName: String, data: Array[Byte])
+case class TransportMessage(messageName: String, data: ByteString)

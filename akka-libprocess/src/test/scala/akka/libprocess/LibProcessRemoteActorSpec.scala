@@ -3,8 +3,10 @@ package akka.libprocess
 import java.net.{ InetSocketAddress, ServerSocket }
 
 import akka.actor.{ ActorSystem, Props }
+import akka.libprocess.LibProcessManager.RemoteRef
 import akka.libprocess.serde.{ RawMessageSerDe, TransportMessage }
-import akka.testkit.{ TestActorRef, TestKit }
+import akka.testkit.{ TestProbe, TestActorRef, TestKit }
+import akka.util.ByteString
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 
 import scala.concurrent.{ Await, Future }
@@ -23,18 +25,21 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
       val socket = new ServerSocket()
       socket.bind(new InetSocketAddress("127.0.0.1", 0))
       val sockFuture = Future(socket.accept())
+      val probe = TestProbe()
 
       val testRef = TestActorRef[LibProcessRemoteActor](
         Props(
           classOf[LibProcessRemoteActor],
-          None,
+          Some(probe.ref),
           "test",
           new InetSocketAddress(socket.getInetAddress, socket.getLocalPort),
           new InetSocketAddress("127.0.0.1", 5051),
           new RawMessageSerDe
-        )
+        ),
+        "ConnectionTestActor"
       )
 
+      probe.expectMsg(RemoteRef(testRef))
       val remoteSocket = Await.result(sockFuture, 1.second)
 
       try {
@@ -59,7 +64,8 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
           new InetSocketAddress(socket.getInetAddress, socket.getLocalPort),
           new InetSocketAddress("127.0.0.1", 5051),
           new RawMessageSerDe
-        )
+        ),
+        "SerializingTestActor"
       )
 
       val remoteSocket = Await.result(sockFuture, 1.second)
@@ -67,8 +73,11 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
       testRef ! LibProcessMessage("slave", "Some string")
       try {
         val expectedHeaders =
-          ("POST /master/java.lang.String HTTP/1.0\r\n" +
+          ("POST /master/java.lang.String HTTP/1.1\r\n" +
             "User-Agent: libprocess/slave@127.0.0.1:5051\r\n" +
+            "X-Mesos-Id: slave\r\n" +
+            "X-Mesos-Ip: 127.0.0.1\r\n" +
+            "X-Mesos-Port: 5051\r\n" +
             "Connection: Keep-Alive\r\n" +
             "Content-Length: 18").getBytes.toSeq
 
@@ -79,7 +88,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
         val body = resized.drop(expectedHeaders.size + 4)
 
         headers.toSeq should equal(expectedHeaders)
-        val deserializedBody = new RawMessageSerDe().deserialize(TransportMessage("", body))
+        val deserializedBody = new RawMessageSerDe().deserialize(TransportMessage("", ByteString(body)))
         deserializedBody.isSuccess should be(true)
         deserializedBody.get should be("Some string")
       } finally {

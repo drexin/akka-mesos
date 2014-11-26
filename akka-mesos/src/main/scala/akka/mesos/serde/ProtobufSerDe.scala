@@ -1,11 +1,11 @@
 package akka.mesos.serde
 
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
-import akka.mesos.protos.{ DeclineResourceOfferMessage, ProtoWrapper }
 import akka.mesos.protos.internal._
+import akka.mesos.protos.{ DeclineResourceOfferMessage, ProtoWrapper }
+import akka.util.ByteString
 import com.google.protobuf.MessageLite
 import com.typesafe.config.Config
-import mesos.internal.Messages
 
 import scala.util.{ Failure, Success, Try }
 
@@ -14,7 +14,7 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   def deserialize(message: TransportMessage): Try[AnyRef] = {
     constructorMapping.get(message.messageName) map { ctor =>
       try {
-        val msg = ctor(message.data)
+        val msg = ctor(message.data.toArray)
         Success(msg)
       } catch {
         case e: Exception =>
@@ -28,7 +28,7 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   def serialize(obj: AnyRef): Try[TransportMessage] = obj match {
     case msg: ProtoWrapper[_] =>
       typeMapping.get(msg.getClass) map { name =>
-        Success(TransportMessage(name, msg.toProto.toByteArray))
+        Success(TransportMessage(name, ByteString(msg.toProto.toByteArray)))
       } getOrElse {
         Failure(new NoSuchElementException)
       }
