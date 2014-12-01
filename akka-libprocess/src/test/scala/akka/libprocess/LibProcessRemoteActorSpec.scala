@@ -74,12 +74,10 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
       try {
         val expectedHeaders =
           ("POST /master/java.lang.String HTTP/1.1\r\n" +
-            "User-Agent: libprocess/slave@127.0.0.1:5051\r\n" +
-            "X-Mesos-Id: slave\r\n" +
-            "X-Mesos-Ip: 127.0.0.1\r\n" +
-            "X-Mesos-Port: 5051\r\n" +
+            "Libprocess-From: slave@127.0.0.1:5051\r\n" +
             "Connection: Keep-Alive\r\n" +
-            "Content-Length: 18").getBytes.toSeq
+            "Content-Length: 18\r\n" +
+            "Host: 127.0.0.1").getBytes.toSeq
 
         val buffer = Array.ofDim[Byte](1024)
         val bytesRead = remoteSocket.getInputStream.read(buffer)
@@ -87,6 +85,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
         val headers = resized.take(expectedHeaders.size)
         val body = resized.drop(expectedHeaders.size + 4)
 
+        println(s"========== ${new String(headers)}")
         headers.toSeq should equal(expectedHeaders)
         val deserializedBody = new RawMessageSerDe().deserialize(TransportMessage("", ByteString(body)))
         deserializedBody.isSuccess should be(true)
