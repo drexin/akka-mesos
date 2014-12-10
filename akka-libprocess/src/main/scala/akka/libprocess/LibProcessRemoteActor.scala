@@ -86,7 +86,7 @@ private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef]
     val builder = ByteString.newBuilder
     log.info(pid.toAddressString)
 
-    builder append ByteString(s"POST /master/$msgName HTTP/1.1\r\n")
+    builder append ByteString(s"POST /$name/$msgName HTTP/1.1\r\n")
     builder append ByteString(s"Libprocess-From: ${pid.toAddressString}\r\n")
     builder append ByteString("Connection: Keep-Alive\r\n")
     builder append ByteString(s"Content-Length: ${data.size}\r\n")

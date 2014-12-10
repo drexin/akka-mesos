@@ -1,5 +1,6 @@
 package akka.mesos.protos.internal
 
+import akka.libprocess.PID
 import akka.mesos.protos.{ ProtoReads, ProtoWrapper }
 import mesos.internal.Messages
 
@@ -7,13 +8,16 @@ import scala.util.Try
 
 final case class StatusUpdateMessage(
     statusUpdate: StatusUpdate,
-    pid: String) extends ProtoWrapper[Messages.StatusUpdateMessage] {
-  def toProto: Messages.StatusUpdateMessage =
-    Messages.StatusUpdateMessage
+    pid: Option[PID]) extends ProtoWrapper[Messages.StatusUpdateMessage] {
+  def toProto: Messages.StatusUpdateMessage = {
+    val builder = Messages.StatusUpdateMessage
       .newBuilder
       .setUpdate(statusUpdate.toProto)
-      .setPid(pid)
-      .build()
+
+    pid.foreach(x => builder.setPid(x.toAddressString))
+
+    builder.build()
+  }
 }
 
 object StatusUpdateMessage extends ProtoReads[StatusUpdateMessage] {
@@ -24,5 +28,5 @@ object StatusUpdateMessage extends ProtoReads[StatusUpdateMessage] {
   def apply(proto: Messages.StatusUpdateMessage): StatusUpdateMessage =
     StatusUpdateMessage(
       StatusUpdate(proto.getUpdate),
-      proto.getPid)
+      if (proto.hasPid) PID.fromAddressString(proto.getPid).toOption else None)
 }

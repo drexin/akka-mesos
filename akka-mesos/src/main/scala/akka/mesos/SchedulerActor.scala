@@ -1,7 +1,7 @@
 package akka.mesos
 
 import akka.actor.{ Stash, ActorLogging, Actor, ActorRef }
-import akka.libprocess.LibProcessMessage
+import akka.libprocess.{ LibProcess, LibProcessMessage }
 import akka.mesos.MesosFrameworkActor.{ MasterRef, MasterDisconnected }
 import akka.mesos.protos.FrameworkInfo
 import akka.mesos.protos.internal._
@@ -13,9 +13,11 @@ private[mesos] class SchedulerActor(
     master: ActorRef,
     timeout: Timeout,
     schedulerCreator: SchedulerDriver => Scheduler) extends Actor with ActorLogging with Stash {
+  import context.dispatcher
 
   var scheduler: Scheduler = _
   var driver: SchedulerDriver = _
+  val libprocess = LibProcess(context.system)
 
   def receive = {
     case FrameworkRegisteredMessage(frameworkId, masterInfo) =>
@@ -36,7 +38,7 @@ private[mesos] class SchedulerActor(
       scheduler.executorLost(executorId, slaveId, status)
 
     case RescindResourceOfferMessage(offerId) => scheduler.offerRescinded(offerId)
-    case StatusUpdateMessage(StatusUpdate(frameworkId, status, _, uuid, _, slaveIdOpt), _) =>
+    case StatusUpdateMessage(StatusUpdate(frameworkId, status, _, uuid, _, slaveIdOpt), pid) =>
       scheduler.statusUpdate(status)
 
       for (slaveId <- slaveIdOpt) {
