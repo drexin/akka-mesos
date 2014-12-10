@@ -73,7 +73,7 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
       testRef ! LibProcessMessage("slave", "Some string")
       try {
         val expectedHeaders =
-          ("POST /master/java.lang.String HTTP/1.1\r\n" +
+          ("POST /test/java.lang.String HTTP/1.1\r\n" +
             "Libprocess-From: slave@127.0.0.1:5051\r\n" +
             "Connection: Keep-Alive\r\n" +
             "Content-Length: 18\r\n" +
@@ -84,6 +84,8 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
         val resized = buffer.take(bytesRead)
         val headers = resized.take(expectedHeaders.size)
         val body = resized.drop(expectedHeaders.size + 4)
+
+        println(new String(headers))
 
         headers.toSeq should equal(expectedHeaders)
         val deserializedBody = new RawMessageSerDe().deserialize(TransportMessage("", ByteString(body)))
