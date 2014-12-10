@@ -5,6 +5,7 @@ import mesos.internal.Messages
 
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 final case class LaunchTasksMessage(
     frameworkId: FrameworkID,
@@ -23,10 +24,11 @@ final case class LaunchTasksMessage(
   }
 }
 
-object LaunchTasksMessage {
+object LaunchTasksMessage extends ProtoReads[LaunchTasksMessage] {
 
-  def fromBytes(bytes: Array[Byte]): LaunchTasksMessage =
+  def fromBytes(bytes: Array[Byte]): Try[LaunchTasksMessage] = Try {
     LaunchTasksMessage(Messages.LaunchTasksMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.LaunchTasksMessage): LaunchTasksMessage = {
     val taskInfos = proto.getTasksList.asScala.map(TaskInfo(_))

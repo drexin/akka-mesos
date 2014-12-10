@@ -32,24 +32,32 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   }
 
   val constructorMapping: Map[String, ProtoReads[_ <: ProtoWrapper[_]]] = Map(
+    "mesos.internal.ExecutorToFrameworkMessage" -> ExecutorToFrameworkMessage,
+    "mesos.internal.ExitedExecutorMessage" -> ExitedExecutorMessage,
+    "mesos.internal.FrameworkErrorMessage" -> FrameworkErrorMessage,
     "mesos.internal.FrameworkRegisteredMessage" -> FrameworkRegisteredMessage,
     "mesos.internal.FrameworkReregisteredMessage" -> FrameworkReregisteredMessage,
-    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage,
-    "mesos.internal.StatusUpdateMessage" -> StatusUpdateMessage,
-    "mesos.internal.FrameworkErrorMessage" -> FrameworkErrorMessage,
-    "mesos.internal.ExitedExecutorMessage" -> ExitedExecutorMessage,
-    "mesos.internal.RescindResourceOfferMessage" -> RescindResourceOfferMessage,
-    "mesos.internal.ExecutorToFrameworkMessage" -> ExecutorToFrameworkMessage,
+    "mesos.internal.FrameworkToExecutorMessage" -> FrameworkToExecutorMessage,
+    "mesos.internal.KillTaskMessage" -> KillTaskMessage,
     "mesos.internal.LostSlaveMessage" -> LostSlaveMessage,
-    "mesos.internal.FrameworkToExecutorMessage" -> FrameworkToExecutorMessage
+    "mesos.internal.RescindResourceOfferMessage" -> RescindResourceOfferMessage,
+    "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage,
+    "mesos.internal.RunTaskMessage" -> RunTaskMessage,
+    "mesos.internal.StatusUpdateMessage" -> StatusUpdateMessage
   )
 
   val typeMapping: Map[Class[_], String] = Map(
+    classOf[DeactivateFrameworkMessage] -> "mesos.internal.DeactivateFrameworkMessage",
+    classOf[DeclineResourceOfferMessage] -> "mesos.internal.LaunchTasksMessage",
+    classOf[FrameworkToExecutorMessage] -> "mesos.internal.FrameworkToExecutorMessage",
+    classOf[KillTaskMessage] -> "mesos.internal.KillTaskMessage",
+    classOf[LaunchTasksMessage] -> "mesos.internal.LaunchTasksMessage",
     classOf[RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
     classOf[ReregisterFrameworkMessage] -> "mesos.internal.ReregisterFrameworkMessage",
     classOf[RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage",
-    classOf[DeclineResourceOfferMessage] -> "mesos.internal.LaunchTasksMessage",
-    classOf[LaunchTasksMessage] -> "mesos.internal.LaunchTasksMessage",
-    classOf[StatusUpdateAcknowledgementMessage] -> "mesos.internal.StatusUpdateAcknowledgementMessage"
+    classOf[ResourceRequestMessage] -> "mesos.internal.ResourceRequestMessage",
+    classOf[ReviveOffersMessage] -> "mesos.internal.ReviveOffersMessage",
+    classOf[StatusUpdateAcknowledgementMessage] -> "mesos.internal.StatusUpdateAcknowledgementMessage",
+    classOf[UnregisterFrameworkMessage] -> "mesos.internal.UnregisterFrameworkMessage"
   )
 }

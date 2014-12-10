@@ -1,20 +1,15 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ TaskInfo, FrameworkInfo, FrameworkID }
+import akka.mesos.protos._
 import mesos.internal.Messages
 
-/*
-required FrameworkID framework_id = 1;
-  required FrameworkInfo framework = 2;
-  required string pid = 3;
-  required TaskInfo task = 4;
- */
+import scala.util.Try
 
 final case class RunTaskMessage(
     frameworkId: FrameworkID,
     frameworkInfo: FrameworkInfo,
     pid: String,
-    task: TaskInfo) {
+    task: TaskInfo) extends ProtoWrapper[Messages.RunTaskMessage] {
   def toProto: Messages.RunTaskMessage =
     Messages.RunTaskMessage
       .newBuilder
@@ -23,4 +18,18 @@ final case class RunTaskMessage(
       .setPid(pid)
       .setTask(task.toProto)
       .build()
+}
+
+object RunTaskMessage extends ProtoReads[RunTaskMessage] {
+  override def fromBytes(bytes: Array[Byte]): Try[RunTaskMessage] = Try {
+    RunTaskMessage(Messages.RunTaskMessage.parseFrom(bytes))
+  }
+
+  def apply(proto: Messages.RunTaskMessage): RunTaskMessage =
+    RunTaskMessage(
+      FrameworkID(proto.getFrameworkId),
+      FrameworkInfo(proto.getFramework),
+      proto.getPid,
+      TaskInfo(proto.getTask)
+    )
 }

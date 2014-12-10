@@ -3,6 +3,7 @@ package akka.mesos.protos
 import org.apache.mesos.Protos
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Seq
 
 final case class Request(
     slaveId: Option[SlaveID] = None,
@@ -15,4 +16,12 @@ final case class Request(
 
     builder.build()
   }
+}
+
+object Request {
+  def apply(proto: Protos.Request): Request =
+    Request(
+      if (proto.hasSlaveId) Some(SlaveID(proto.getSlaveId)) else None,
+      proto.getResourcesList.asScala.map(Resource(_)).to[Seq]
+    )
 }
