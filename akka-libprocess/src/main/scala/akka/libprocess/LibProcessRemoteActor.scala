@@ -74,6 +74,8 @@ private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef]
     case ErrorClosed(cause) =>
       log.error(s"Connection closed with an error: $cause. Shutting down actor.")
       context.stop(self)
+
+    case Received(_) => // ignore result
   }
 
   def pidWithId(id: String): PID = {
