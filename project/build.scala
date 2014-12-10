@@ -91,7 +91,7 @@ object Dependencies {
 object Dependency {
   object V {
     val Akka        = "2.3.6"
-    val AkkaHttp    = "0.11"
+    val AkkaHttp    = "1.0-M1"
     val Protobuf    = "2.5.0"
     val Config      = "1.2.1"
     val ScalaTest   = "2.1.3"
