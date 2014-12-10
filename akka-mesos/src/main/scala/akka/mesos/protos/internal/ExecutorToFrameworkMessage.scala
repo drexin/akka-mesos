@@ -1,9 +1,11 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ ProtoWrapper, FrameworkID, ExecutorID, SlaveID }
+import akka.mesos.protos._
 import akka.util.ByteString
 import com.google.protobuf.{ ByteString => PBByteString }
 import mesos.internal.Messages
+
+import scala.util.Try
 
 final case class ExecutorToFrameworkMessage(
     slaveId: SlaveID,
@@ -20,9 +22,10 @@ final case class ExecutorToFrameworkMessage(
       .build()
 }
 
-object ExecutorToFrameworkMessage {
-  def fromBytes(bytes: Array[Byte]): ExecutorToFrameworkMessage =
+object ExecutorToFrameworkMessage extends ProtoReads[ExecutorToFrameworkMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[ExecutorToFrameworkMessage] = Try {
     ExecutorToFrameworkMessage(Messages.ExecutorToFrameworkMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.ExecutorToFrameworkMessage): ExecutorToFrameworkMessage =
     ExecutorToFrameworkMessage(

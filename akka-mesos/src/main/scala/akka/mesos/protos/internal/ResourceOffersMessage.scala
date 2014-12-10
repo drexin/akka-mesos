@@ -1,10 +1,11 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ ProtoWrapper, Offer }
+import akka.mesos.protos.{ ProtoReads, ProtoWrapper, Offer }
 import mesos.internal.Messages
 
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 final case class ResourceOffersMessage(
     offers: Seq[Offer],
@@ -17,9 +18,10 @@ final case class ResourceOffersMessage(
       .build()
 }
 
-object ResourceOffersMessage {
-  def fromBytes(bytes: Array[Byte]): ResourceOffersMessage =
+object ResourceOffersMessage extends ProtoReads[ResourceOffersMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[ResourceOffersMessage] = Try {
     ResourceOffersMessage(Messages.ResourceOffersMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.ResourceOffersMessage): ResourceOffersMessage =
     ResourceOffersMessage(

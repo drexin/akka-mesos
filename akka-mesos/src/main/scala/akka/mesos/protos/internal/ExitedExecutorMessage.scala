@@ -1,7 +1,9 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ ProtoWrapper, SlaveID, ExecutorID, FrameworkID }
+import akka.mesos.protos._
 import mesos.internal.Messages
+
+import scala.util.Try
 
 final case class ExitedExecutorMessage(
     slaveId: SlaveID,
@@ -18,9 +20,10 @@ final case class ExitedExecutorMessage(
       .build()
 }
 
-object ExitedExecutorMessage {
-  def fromBytes(bytes: Array[Byte]): ExitedExecutorMessage =
+object ExitedExecutorMessage extends ProtoReads[ExitedExecutorMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[ExitedExecutorMessage] = Try {
     ExitedExecutorMessage(Messages.ExitedExecutorMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.ExitedExecutorMessage): ExitedExecutorMessage =
     ExitedExecutorMessage(

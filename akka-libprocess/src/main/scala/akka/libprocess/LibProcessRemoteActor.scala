@@ -46,7 +46,7 @@ private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef]
       receiver.foreach(_ ! Status.Failure(new RemoteRefRetrievalException(s"Could not connect to remote node at ${cmd.remoteAddress}.")))
       context.stop(self)
 
-    case x => stash()
+    case _ => stash()
   }
 
   def ready: Receive = {

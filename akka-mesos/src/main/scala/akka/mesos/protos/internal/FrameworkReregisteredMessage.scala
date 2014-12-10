@@ -1,7 +1,9 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ ProtoWrapper, FrameworkID, MasterInfo }
+import akka.mesos.protos.{ ProtoReads, ProtoWrapper, FrameworkID, MasterInfo }
 import mesos.internal.Messages
+
+import scala.util.Try
 
 final case class FrameworkReregisteredMessage(
     frameworkId: FrameworkID,
@@ -14,9 +16,10 @@ final case class FrameworkReregisteredMessage(
       .build()
 }
 
-object FrameworkReregisteredMessage {
-  def fromBytes(bytes: Array[Byte]): FrameworkReregisteredMessage =
+object FrameworkReregisteredMessage extends ProtoReads[FrameworkReregisteredMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[FrameworkReregisteredMessage] = Try {
     FrameworkReregisteredMessage(Messages.FrameworkReregisteredMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.FrameworkReregisteredMessage): FrameworkReregisteredMessage =
     FrameworkReregisteredMessage(

@@ -1,7 +1,9 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ ProtoWrapper, OfferID }
+import akka.mesos.protos.{ ProtoReads, ProtoWrapper, OfferID }
 import mesos.internal.Messages
+
+import scala.util.Try
 
 final case class RescindResourceOfferMessage(offerId: OfferID) extends ProtoWrapper[Messages.RescindResourceOfferMessage] {
   def toProto: Messages.RescindResourceOfferMessage =
@@ -11,9 +13,10 @@ final case class RescindResourceOfferMessage(offerId: OfferID) extends ProtoWrap
       .build()
 }
 
-object RescindResourceOfferMessage {
-  def fromBytes(bytes: Array[Byte]): RescindResourceOfferMessage =
+object RescindResourceOfferMessage extends ProtoReads[RescindResourceOfferMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[RescindResourceOfferMessage] = Try {
     RescindResourceOfferMessage(Messages.RescindResourceOfferMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.RescindResourceOfferMessage): RescindResourceOfferMessage =
     RescindResourceOfferMessage(OfferID(proto.getOfferId))

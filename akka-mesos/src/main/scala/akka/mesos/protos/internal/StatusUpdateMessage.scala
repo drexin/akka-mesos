@@ -1,7 +1,9 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.ProtoWrapper
+import akka.mesos.protos.{ ProtoReads, ProtoWrapper }
 import mesos.internal.Messages
+
+import scala.util.Try
 
 final case class StatusUpdateMessage(
     statusUpdate: StatusUpdate,
@@ -14,9 +16,10 @@ final case class StatusUpdateMessage(
       .build()
 }
 
-object StatusUpdateMessage {
-  def fromBytes(bytes: Array[Byte]): StatusUpdateMessage =
+object StatusUpdateMessage extends ProtoReads[StatusUpdateMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[StatusUpdateMessage] = Try {
     StatusUpdateMessage(Messages.StatusUpdateMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.StatusUpdateMessage): StatusUpdateMessage =
     StatusUpdateMessage(
