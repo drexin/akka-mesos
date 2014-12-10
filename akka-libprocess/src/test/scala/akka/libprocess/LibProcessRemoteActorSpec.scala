@@ -85,7 +85,6 @@ class LibProcessRemoteActorSpec extends TestKit(ActorSystem("system")) with Word
         val headers = resized.take(expectedHeaders.size)
         val body = resized.drop(expectedHeaders.size + 4)
 
-        println(s"========== ${new String(headers)}")
         headers.toSeq should equal(expectedHeaders)
         val deserializedBody = new RawMessageSerDe().deserialize(TransportMessage("", ByteString(body)))
         deserializedBody.isSuccess should be(true)
