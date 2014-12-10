@@ -13,9 +13,7 @@ import akka.libprocess.LibProcessManager.LibProcessInternalMessage
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{ Flow, Sink }
-import akka.util.Timeout
 
-import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
 
 private[libprocess] class LibProcessHTTPEndpoint(address: String, port: Int, messageSerDe: MessageSerDe, manager: ActorRef) extends Actor with ActorLogging {
@@ -23,10 +21,8 @@ private[libprocess] class LibProcessHTTPEndpoint(address: String, port: Int, mes
   import context.dispatcher
 
   implicit val materializer = FlowMaterializer()
-  implicit val askTimeout: Timeout = 500.millis
 
   val pathRegex = "/([^/]+)/(.+)".r
-  val pidRegex = "libprocess/(.+)".r
 
   override def preStart(): Unit = {
     val binding = Http(context.system).bind(address, port)
