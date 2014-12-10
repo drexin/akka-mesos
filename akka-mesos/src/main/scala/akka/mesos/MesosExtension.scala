@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
+import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
 
 object Mesos extends ExtensionId[MesosExtension] with ExtensionIdProvider {
@@ -26,11 +27,15 @@ object Mesos extends ExtensionId[MesosExtension] with ExtensionIdProvider {
 
 class MesosExtension(system: ExtendedActorSystem) extends Extension {
   def registerFramework(master: PID, framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler): ActorRef = {
-    system.actorOf(Props(classOf[MesosFramework], master, framework, schedulerCreator))
+    registerFramework(Success(master), framework, schedulerCreator)
+  }
+
+  def registerFramework(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler): ActorRef = {
+    system.actorOf(Props(new MesosFramework(master, framework, schedulerCreator)))
   }
 }
 
-class MesosFramework(master: PID, framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler) extends Actor with Stash with ActorLogging {
+class MesosFramework(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler) extends Actor with Stash with ActorLogging {
   import akka.mesos.MesosFramework._
   import context.dispatcher
 
@@ -70,9 +75,13 @@ class MesosFramework(master: PID, framework: FrameworkInfo, schedulerCreator: Sc
   }
 
   def connecting: Receive = {
-    case Connect(pid) =>
+    case Connect =>
       log.info(s"Trying to connect to master @ $master")
-      LibProcess(context.system).remoteRef(master).map(MasterRef) pipeTo self
+      master match {
+        case Success(masterPid) => LibProcess(context.system).remoteRef(masterPid).map(MasterRef) pipeTo self
+        case Failure(e) =>
+          log.error(e, "Failed to retrieve master PID.")
+      }
 
     case msg @ MasterRef(ref) =>
       context.watch(ref)
@@ -132,13 +141,13 @@ class MesosFramework(master: PID, framework: FrameworkInfo, schedulerCreator: Sc
     context.system.scheduler.scheduleOnce(
       delay,
       self,
-      Connect(master))
+      Connect)
   }
 }
 
 object MesosFramework {
   final case class MasterRef(ref: ActorRef)
-  final case class Connect(pid: PID)
+  case object Connect
   case object MasterDisconnected
   case object Register
 }
@@ -268,5 +277,12 @@ object Main extends App {
 
   val system = ActorSystem("Mesos", config)
 
-  Mesos(system).registerFramework(PID("127.0.0.1", 5050, "master"), FrameworkInfo("foo", "corpsi"), driver => new MyScheduler(driver))
+  val framework = FrameworkInfo(
+    name = "foo",
+    user = "corpsi",
+    failoverTimeout = Some(5.minute),
+    checkpoint = Some(true)
+  )
+
+  Mesos(system).registerFramework(PID("127.0.0.1", 5050, "master"), framework, driver => new MyScheduler(driver))
 }
