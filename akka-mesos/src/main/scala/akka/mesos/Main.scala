@@ -2,6 +2,7 @@ package akka.mesos
 
 import akka.libprocess.PID
 import akka.mesos.protos._
+import akka.mesos.scheduler.{ SchedulerDriver, Scheduler }
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory

@@ -1,8 +1,8 @@
-package akka.mesos
+package akka.mesos.scheduler
 
-import akka.actor.{ Stash, ActorLogging, Actor, ActorRef }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Stash }
 import akka.libprocess.{ LibProcess, LibProcessMessage }
-import akka.mesos.MesosFrameworkActor.{ MasterRef, MasterDisconnected }
+import akka.mesos.MesosFrameworkActor.{ MasterDisconnected, MasterRef }
 import akka.mesos.protos.FrameworkInfo
 import akka.mesos.protos.internal._
 import akka.util.Timeout
@@ -53,10 +53,8 @@ private[mesos] class SchedulerActor(
       scheduler.disconnected()
       context.become(disconnected)
 
-    case FrameworkRegisteredMessage(frameworkId, masterInfo) => scheduler.registered(frameworkId, masterInfo)
+    case FrameworkRegisteredMessage(frameworkId, masterInfo)   => scheduler.registered(frameworkId, masterInfo)
     case FrameworkReregisteredMessage(frameworkId, masterInfo) => scheduler.reregistered(masterInfo)
-
-    case x => log.warning(s"Received unexpected message: $x")
   }
 
   def disconnected: Receive = {

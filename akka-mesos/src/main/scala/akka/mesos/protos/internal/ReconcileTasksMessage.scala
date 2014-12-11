@@ -1,9 +1,10 @@
 package akka.mesos.protos.internal
 
-import akka.mesos.protos.{ ProtoWrapper, TaskStatus, FrameworkID }
+import akka.mesos.protos.{ ProtoReads, ProtoWrapper, TaskStatus, FrameworkID }
 import mesos.internal.Messages
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 final case class ReconcileTasksMessage(
     frameworkId: FrameworkID,
@@ -16,9 +17,10 @@ final case class ReconcileTasksMessage(
       .build()
 }
 
-object ReconcileTasksMessage {
-  def fromBytes(bytes: Array[Byte]): ReconcileTasksMessage =
+object ReconcileTasksMessage extends ProtoReads[ReconcileTasksMessage] {
+  def fromBytes(bytes: Array[Byte]): Try[ReconcileTasksMessage] = Try {
     ReconcileTasksMessage(Messages.ReconcileTasksMessage.parseFrom(bytes))
+  }
 
   def apply(proto: Messages.ReconcileTasksMessage): ReconcileTasksMessage =
     ReconcileTasksMessage(

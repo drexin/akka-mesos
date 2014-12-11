@@ -1,14 +1,14 @@
-package akka.mesos
+package akka.mesos.scheduler
 
-import akka.actor.{ PoisonPill, ActorRef }
+import akka.actor.{ ActorRef, PoisonPill }
 import akka.libprocess.LibProcessMessage
-import akka.mesos.protos.internal._
 import akka.mesos.protos._
+import akka.mesos.protos.internal._
 import akka.pattern.ask
 import akka.util.{ ByteString, Timeout }
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 
 final class SchedulerDriver private[mesos] (
     frameworkInfo: FrameworkInfo,

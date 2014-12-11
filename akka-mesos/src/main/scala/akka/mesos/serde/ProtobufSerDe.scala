@@ -4,7 +4,6 @@ import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
 import akka.mesos.protos.internal._
 import akka.mesos.protos.{ ProtoReads, DeclineResourceOfferMessage, ProtoWrapper }
 import akka.util.ByteString
-import com.google.protobuf.MessageLite
 import com.typesafe.config.Config
 
 import scala.util.{ Failure, Success, Try }
@@ -32,6 +31,8 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
   }
 
   val constructorMapping: Map[String, ProtoReads[_ <: ProtoWrapper[_]]] = Map(
+    "mesos.internal.ExecutorRegisteredMessage" -> ExecutorRegisteredMessage,
+    "mesos.internal.ExecutorReregisteredMessage" -> ExecutorReregisteredMessage,
     "mesos.internal.ExecutorToFrameworkMessage" -> ExecutorToFrameworkMessage,
     "mesos.internal.ExitedExecutorMessage" -> ExitedExecutorMessage,
     "mesos.internal.FrameworkErrorMessage" -> FrameworkErrorMessage,
@@ -40,9 +41,11 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
     "mesos.internal.FrameworkToExecutorMessage" -> FrameworkToExecutorMessage,
     "mesos.internal.KillTaskMessage" -> KillTaskMessage,
     "mesos.internal.LostSlaveMessage" -> LostSlaveMessage,
+    "mesos.internal.ReconnectExecutor" -> ReconnectExecutorMessage,
     "mesos.internal.RescindResourceOfferMessage" -> RescindResourceOfferMessage,
     "mesos.internal.ResourceOffersMessage" -> ResourceOffersMessage,
     "mesos.internal.RunTaskMessage" -> RunTaskMessage,
+    "mesos.internal.ShutdownExecutorMessage" -> ShutdownExecutorMessage,
     "mesos.internal.StatusUpdateMessage" -> StatusUpdateMessage
   )
 
@@ -52,7 +55,10 @@ class ProtobufSerDe(config: Config) extends MessageSerDe {
     classOf[FrameworkToExecutorMessage] -> "mesos.internal.FrameworkToExecutorMessage",
     classOf[KillTaskMessage] -> "mesos.internal.KillTaskMessage",
     classOf[LaunchTasksMessage] -> "mesos.internal.LaunchTasksMessage",
+    classOf[ReconcileTasksMessage] -> "mesos.internal.ReconcileTasksMessage",
+    classOf[RegisterExecutorMessage] -> "mesos.internal.RegisterExecutorMessage",
     classOf[RegisterFrameworkMessage] -> "mesos.internal.RegisterFrameworkMessage",
+    classOf[ReregisterExecutorMessage] -> "mesos.internal.ReregisterExecutorMessage",
     classOf[ReregisterFrameworkMessage] -> "mesos.internal.ReregisterFrameworkMessage",
     classOf[RescindResourceOfferMessage] -> "mesos.internal.RescindResourceOfferMessage",
     classOf[ResourceRequestMessage] -> "mesos.internal.ResourceRequestMessage",

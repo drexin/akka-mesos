@@ -1,7 +1,10 @@
 package akka.mesos.protos
 
 import org.apache.mesos.Protos
+
+import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 final case class SlaveInfo(
     hostname: String,
@@ -9,7 +12,7 @@ final case class SlaveInfo(
     resources: Seq[Resource] = Nil,
     attributes: Seq[Attribute] = Nil,
     id: Option[SlaveID] = None,
-    checkpoint: Boolean = false) {
+    checkpoint: Boolean = false) extends ProtoWrapper[Protos.SlaveInfo] {
   def toProto: Protos.SlaveInfo = {
     val builder = Protos.SlaveInfo
       .newBuilder
@@ -23,4 +26,20 @@ final case class SlaveInfo(
 
     builder.build()
   }
+}
+
+object SlaveInfo extends ProtoReads[SlaveInfo] {
+  override def fromBytes(bytes: Array[Byte]): Try[SlaveInfo] = Try {
+    SlaveInfo(Protos.SlaveInfo.parseFrom(bytes))
+  }
+
+  def apply(proto: Protos.SlaveInfo): SlaveInfo =
+    SlaveInfo(
+      proto.getHostname,
+      if (proto.hasPort) Some(proto.getPort) else None,
+      proto.getResourcesList.asScala.map(Resource(_)).to[Seq],
+      proto.getAttributesList.asScala.map(Attribute(_)).to[Seq],
+      if (proto.hasId) Some(SlaveID(proto.getId)) else None,
+      proto.getCheckpoint
+    )
 }

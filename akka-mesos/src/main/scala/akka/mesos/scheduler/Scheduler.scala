@@ -1,4 +1,4 @@
-package akka.mesos
+package akka.mesos.scheduler
 
 import akka.mesos.protos._
 import akka.util.ByteString

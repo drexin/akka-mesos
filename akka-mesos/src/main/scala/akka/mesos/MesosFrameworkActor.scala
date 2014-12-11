@@ -7,6 +7,7 @@ import akka.libprocess.LibProcessManager.Registered
 import akka.libprocess.{ LibProcess, LibProcessMessage, LibProcessManager, PID }
 import akka.mesos.protos.internal.{ FrameworkReregisteredMessage, FrameworkRegisteredMessage, ReregisterFrameworkMessage, RegisterFrameworkMessage }
 import akka.mesos.protos.{ ProtoWrapper, FrameworkID, FrameworkInfo }
+import akka.mesos.scheduler.{ SchedulerDriver, SchedulerActor }
 import akka.pattern.pipe
 import akka.util.Timeout
 

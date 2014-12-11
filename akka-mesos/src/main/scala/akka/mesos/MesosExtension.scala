@@ -3,6 +3,7 @@ package akka.mesos
 import akka.actor._
 import akka.libprocess._
 import akka.mesos.protos._
+import akka.mesos.scheduler.SchedulerDriver
 
 import scala.util.{ Success, Try }
 
@@ -14,11 +15,11 @@ object Mesos extends ExtensionId[MesosExtension] with ExtensionIdProvider {
 }
 
 class MesosExtension(system: ExtendedActorSystem) extends Extension {
-  def registerFramework(master: PID, framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler): ActorRef = {
+  def registerFramework(master: PID, framework: FrameworkInfo, schedulerCreator: SchedulerDriver => scheduler.Scheduler): ActorRef = {
     registerFramework(Success(master), framework, schedulerCreator)
   }
 
-  def registerFramework(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler): ActorRef = {
+  def registerFramework(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => scheduler.Scheduler): ActorRef = {
     system.actorOf(Props(new MesosFrameworkActor(master, framework, schedulerCreator)))
   }
 }
