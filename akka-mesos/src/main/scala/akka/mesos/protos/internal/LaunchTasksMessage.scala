@@ -9,16 +9,16 @@ import scala.util.Try
 
 final case class LaunchTasksMessage(
     frameworkId: FrameworkID,
-    tasksToOfferIds: Seq[(TaskInfo, OfferID)],
+    tasks: Seq[TaskInfo],
+    offers: Seq[OfferID],
     filters: Filters) extends ProtoWrapper[Messages.LaunchTasksMessage] {
   def toProto: Messages.LaunchTasksMessage = {
-    val (tasks, offerIds) = tasksToOfferIds.unzip
 
     Messages.LaunchTasksMessage
       .newBuilder
       .setFrameworkId(frameworkId.toProto)
       .addAllTasks(tasks.map(_.toProto).asJava)
-      .addAllOfferIds(offerIds.map(_.toProto).asJava)
+      .addAllOfferIds(offers.map(_.toProto).asJava)
       .setFilters(filters.toProto)
       .build()
   }
@@ -31,14 +31,13 @@ object LaunchTasksMessage extends ProtoReads[LaunchTasksMessage] {
   }
 
   def apply(proto: Messages.LaunchTasksMessage): LaunchTasksMessage = {
-    val taskInfos = proto.getTasksList.asScala.map(TaskInfo(_))
-    val offerIds = proto.getOfferIdsList.asScala.map(OfferID(_))
-
-    val tasksToOfferIds = taskInfos zip offerIds
+    val taskInfos = proto.getTasksList.asScala.map(TaskInfo(_)).to[Seq]
+    val offers = proto.getOfferIdsList.asScala.map(OfferID(_)).to[Seq]
 
     LaunchTasksMessage(
       FrameworkID(proto.getFrameworkId),
-      tasksToOfferIds.to[Seq],
+      taskInfos,
+      offers,
       Filters(proto.getFilters)
     )
   }

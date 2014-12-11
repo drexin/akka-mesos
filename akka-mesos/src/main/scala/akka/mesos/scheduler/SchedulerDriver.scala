@@ -2,6 +2,7 @@ package akka.mesos.scheduler
 
 import akka.actor.{ ActorRef, PoisonPill }
 import akka.libprocess.LibProcessMessage
+import akka.mesos.MesosFrameworkActor.Deactivate
 import akka.mesos.protos._
 import akka.mesos.protos.internal._
 import akka.pattern.ask
@@ -28,15 +29,18 @@ final class SchedulerDriver private[mesos] (
 
   def stop(): Unit = stop(failover = false)
 
-  def abort(): Unit = send(DeactivateFrameworkMessage(frameworkId))
+  def abort(): Unit = {
+    send(DeactivateFrameworkMessage(frameworkId))
+    framework ! Deactivate
+  }
 
   def requestResources(requests: Seq[Request]): Unit =
     send(ResourceRequestMessage(frameworkId, requests))
 
-  def launchTasks(tasksToOfferIds: Seq[(TaskInfo, OfferID)], filters: Filters): Unit =
-    send(LaunchTasksMessage(frameworkId, tasksToOfferIds, filters))
+  def launchTasks(tasks: Seq[TaskInfo], offers: Seq[OfferID], filters: Filters): Unit =
+    send(LaunchTasksMessage(frameworkId, tasks, offers, filters))
 
-  def launchTasks(tasksToOfferIds: Seq[(TaskInfo, OfferID)]): Unit = launchTasks(tasksToOfferIds, Filters(None))
+  def launchTasks(tasks: Seq[TaskInfo], offers: Seq[OfferID]): Unit = launchTasks(tasks, offers, Filters(None))
 
   def killTask(taskId: TaskID): Unit = send(KillTaskMessage(frameworkId, taskId))
 
@@ -55,4 +59,3 @@ final class SchedulerDriver private[mesos] (
 
   private def send(msg: ProtoWrapper[_]) = master ! LibProcessMessage(frameworkInfo.name, msg)
 }
-

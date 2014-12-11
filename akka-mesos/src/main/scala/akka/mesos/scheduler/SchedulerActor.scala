@@ -19,6 +19,10 @@ private[mesos] class SchedulerActor(
   var driver: SchedulerDriver = _
   val libprocess = LibProcess(context.system)
 
+  override def postStop(): Unit = {
+    driver.stop()
+  }
+
   def receive = {
     case FrameworkRegisteredMessage(frameworkId, masterInfo) =>
       driver = new SchedulerDriver(frameworkInfo, frameworkId, framework, master)(context.dispatcher, timeout)

@@ -7,7 +7,7 @@ import akka.libprocess.LibProcessManager.Registered
 import akka.libprocess.{ LibProcess, LibProcessMessage, LibProcessManager, PID }
 import akka.mesos.protos.internal.{ FrameworkReregisteredMessage, FrameworkRegisteredMessage, ReregisterFrameworkMessage, RegisterFrameworkMessage }
 import akka.mesos.protos.{ ProtoWrapper, FrameworkID, FrameworkInfo }
-import akka.mesos.scheduler.{ SchedulerDriver, SchedulerActor }
+import akka.mesos.scheduler.{ Scheduler, SchedulerDriver, SchedulerActor }
 import akka.pattern.pipe
 import akka.util.Timeout
 
@@ -15,13 +15,13 @@ import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
 
-class MesosFrameworkActor(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler) extends Actor with Stash with ActorLogging {
+private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler) extends Actor with Stash with ActorLogging {
   import akka.mesos.MesosFrameworkActor._
   import context.dispatcher
 
   val connectionRetryDelay = context.system.settings.config.getDuration("akka.libprocess.retry-delay", TimeUnit.MILLISECONDS).millis
 
-  var schedulerRef: ActorRef = _
+  var schedulerRef: Option[ActorRef] = None
   var masterRef: ActorRef = _
   var frameworkId: Option[FrameworkID] = None
   var scheduledTask: Option[Cancellable] = None
@@ -47,11 +47,13 @@ class MesosFrameworkActor(master: => Try[PID], framework: FrameworkInfo, schedul
     case Terminated(ref) if ref == masterRef =>
       log.warning(s"Lost connection to master, trying to reconnect in ${connectionRetryDelay.toMillis}ms.")
       context.unwatch(ref)
-      schedulerRef ! MasterDisconnected
+      schedulerRef.foreach(_ ! MasterDisconnected)
       scheduleConnect(connectionRetryDelay)
       context.become(connecting)
 
-    case x: ProtoWrapper[_] => schedulerRef forward x
+    case Deactivate         => context.become(connecting)
+
+    case x: ProtoWrapper[_] => schedulerRef.foreach(_ forward x)
   }
 
   def connecting: Receive = {
@@ -94,23 +96,28 @@ class MesosFrameworkActor(master: => Try[PID], framework: FrameworkInfo, schedul
       scheduledTask.foreach(_.cancel())
       frameworkId = Some(id)
       val timeout: Timeout = context.system.settings.config.getDuration("akka.libprocess.timeout", TimeUnit.MILLISECONDS).millis
-      schedulerRef = context.actorOf(Props(classOf[SchedulerActor], framework, self, masterRef, timeout, schedulerCreator))
-      schedulerRef forward msg
+
+      if (schedulerRef.isEmpty)
+        schedulerRef = Some(context.actorOf(Props(classOf[SchedulerActor], framework, self, masterRef, timeout, schedulerCreator)))
+
+      schedulerRef.foreach(_ forward msg)
       context.become(ready)
       unstashAll()
 
     case msg @ FrameworkReregisteredMessage(id, _) =>
       scheduledTask.foreach(_.cancel())
       frameworkId = Some(id)
-      schedulerRef forward msg
-      schedulerRef ! MasterRef(masterRef)
+      schedulerRef.foreach { ref =>
+        ref forward msg
+        ref ! MasterRef(masterRef)
+      }
       context.become(ready)
       unstashAll()
 
     case Terminated(ref) if ref == masterRef =>
       log.warning(s"Lost connection to master, trying to reconnect in ${connectionRetryDelay.toMillis}ms.")
       context.unwatch(ref)
-      schedulerRef ! MasterDisconnected
+      schedulerRef.foreach(_ ! MasterDisconnected)
       scheduleConnect(connectionRetryDelay)
       context.become(registering)
 
@@ -130,4 +137,5 @@ object MesosFrameworkActor {
   case object Connect
   case object MasterDisconnected
   case object Register
+  case object Deactivate
 }

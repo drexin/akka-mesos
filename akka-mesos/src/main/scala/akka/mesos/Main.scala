@@ -14,6 +14,8 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
 
   val log = LoggerFactory.getLogger(getClass)
   var taskCounter: Int = 0
+  def TaskMem = 16
+  def TaskCPUs = 0.1
 
   override def registered(frameworkId: FrameworkID, masterInfo: MasterInfo): Unit = {
     log.info(s"Framework $frameworkId registered with master ${masterInfo.id}")
@@ -41,25 +43,39 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
 
   override def statusUpdate(status: TaskStatus): Unit = {
     log.info(s"Task ${status.taskId.value} is now ${status.state}")
+    if (status.state == TaskState.TaskFinished) driver.stop()
   }
 
   override def resourceOffers(offers: Seq[Offer]): Unit = {
     offers foreach { offer =>
       log.info(s"Starting sleep task with offer: ${offer.id}")
-      val task = TaskInfo(
-        name = "sleep",
-        taskId = TaskID(s"sleep-$taskCounter"),
-        slaveId = offer.slaveId,
-        offer.resources.filter(_.tpe != ResourceType.PORTS),
-        command = Some(
-          CommandInfo(
-            value = "sleep 1"
+
+      val memCount = offer.resources.collectFirst {
+        case ScalarResource(tpe, value, _) if tpe == ResourceType.MEM => (value / TaskMem).toInt
+      }.getOrElse(0)
+
+      val cpuCount = offer.resources.collectFirst {
+        case ScalarResource(tpe, value, _) if tpe == ResourceType.CPUS => (value / TaskCPUs).toInt
+      }.getOrElse(0)
+
+      val taskCount = memCount min cpuCount
+
+      val tasks = for (_ <- 0 until taskCount) yield {
+        val task = TaskInfo(
+          name = "sleep",
+          taskId = TaskID(s"sleep-$taskCounter"),
+          slaveId = offer.slaveId,
+          Seq(ScalarResource(ResourceType.MEM, TaskMem), ScalarResource(ResourceType.CPUS, TaskCPUs)),
+          command = Some(
+            CommandInfo(
+              value = "sleep 10"
+            )
           )
         )
-      )
-
-      taskCounter += 1
-      driver.launchTasks(Seq(task -> offer.id))
+        taskCounter += 1
+        task
+      }
+      driver.launchTasks(tasks, Seq(offer.id))
     }
   }
 
