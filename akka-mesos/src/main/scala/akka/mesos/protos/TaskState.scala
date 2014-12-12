@@ -20,6 +20,10 @@ object TaskState {
     def toProto: Protos.TaskState = Protos.TaskState.TASK_RUNNING
   }
 
+  case object TaskError extends TaskState {
+    def toProto: Protos.TaskState = Protos.TaskState.TASK_ERROR
+  }
+
   case object TaskFinished extends TaskState {
     def toProto: Protos.TaskState = Protos.TaskState.TASK_FINISHED
   }
@@ -44,5 +48,6 @@ object TaskState {
     case Protos.TaskState.TASK_FAILED   => TaskFailed
     case Protos.TaskState.TASK_KILLED   => TaskKilled
     case Protos.TaskState.TASK_LOST     => TaskLost
+    case Protos.TaskState.TASK_ERROR    => TaskError
   }
 }

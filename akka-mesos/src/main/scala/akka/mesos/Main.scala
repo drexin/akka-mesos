@@ -43,7 +43,6 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
 
   override def statusUpdate(status: TaskStatus): Unit = {
     log.info(s"Task ${status.taskId.value} is now ${status.state}")
-    if (status.state == TaskState.TaskFinished) driver.stop()
   }
 
   override def resourceOffers(offers: Seq[Offer]): Unit = {
