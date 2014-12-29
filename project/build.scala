@@ -1,6 +1,5 @@
 import sbt._
 import Keys._
-import sbtprotobuf.{ ProtobufPlugin => PB }
 import sbtrelease.ReleasePlugin._
 import com.typesafe.sbt.SbtScalariform._
 import scalariform.formatter.preferences._
@@ -17,9 +16,9 @@ object AkkaMesosBuild extends Build {
   lazy val mesos = Project(
     id = "akka-mesos",
     base = file("akka-mesos"),
-    settings = baseSettings ++ PB.protobufSettings ++ Seq(
+    settings = baseSettings ++ Protobuf.settings ++ Seq(
       libraryDependencies ++= Dependencies.mesos,
-      javaSource in PB.protobufConfig <<= (sourceDirectory in Compile)(_ / "java")
+      (compile in Compile) <<= (compile in Compile) dependsOn Protobuf.generate
     ),
     dependencies = Seq(libprocess)
   )
@@ -35,7 +34,7 @@ object AkkaMesosBuild extends Build {
 
   lazy val baseSettings = Defaults.defaultSettings ++ formatSettings ++ releaseSettings ++ Seq(
     organization := "io.mesosphere.akka",
-    scalaVersion := "2.11.2",
+    scalaVersion := "2.11.4",
 
     scalacOptions in Compile ++= Seq(
       "-unchecked",
@@ -73,8 +72,11 @@ object Dependencies {
   import Dependency._
 
   val mesos = Seq(
-    akkaActor   % "compile",
-    protobuf    % "compile"
+    akkaActor         % "compile",
+    protobuf          % "compile",
+    Test.akkaTestKit  % "test",
+    Test.scalaCheck   % "test",
+    Test.scalaTest    % "test"
   )
 
   val libprocess = Seq(
@@ -90,10 +92,11 @@ object Dependencies {
 
 object Dependency {
   object V {
-    val Akka        = "2.3.6"
-    val AkkaHttp    = "1.0-M1"
+    val Akka        = "2.3.8"
+    val AkkaHttp    = "1.0-M2"
     val Protobuf    = "2.5.0"
     val Config      = "1.2.1"
+    val ScalaCheck  = "1.12.1"
     val ScalaTest   = "2.1.3"
     val Slf4j       = "1.7.2"
     val Logback     = "1.0.9"
@@ -108,6 +111,7 @@ object Dependency {
 
   object Test {
     val akkaTestKit = "com.typesafe.akka" %% "akka-testkit"    % V.Akka
+    val scalaCheck  = "org.scalacheck"    %% "scalacheck"      % V.ScalaCheck
     val scalaTest   = "org.scalatest"     %% "scalatest"       % V.ScalaTest
   }
 }
