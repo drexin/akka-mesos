@@ -2,7 +2,9 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos
 
-final case class Volume(containerPath: String, mode: Volume.Mode, hostPath: Option[String] = None) {
+import scala.util.Try
+
+final case class Volume(containerPath: String, mode: Volume.Mode, hostPath: Option[String] = None) extends ProtoWrapper[Protos.Volume] {
   def toProto: Protos.Volume = {
     val builder = Protos.Volume
       .newBuilder()
@@ -14,7 +16,7 @@ final case class Volume(containerPath: String, mode: Volume.Mode, hostPath: Opti
   }
 }
 
-object Volume {
+object Volume extends ProtoReads[Volume] {
 
   def apply(proto: Protos.Volume): Volume = {
     val hostPath = if (proto.hasHostPath) Some(proto.getHostPath) else None
@@ -42,5 +44,9 @@ object Volume {
     case object RO extends Mode {
       def toProto = Protos.Volume.Mode.RO
     }
+  }
+
+  override def fromBytes(bytes: Array[Byte]): Try[Volume] = Try {
+    Volume(Protos.Volume.parseFrom(bytes))
   }
 }

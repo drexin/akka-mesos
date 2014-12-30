@@ -15,6 +15,8 @@ object ContainerInfo {
       DockerContainerInfo(
         proto.getVolumesList.asScala.map(Volume(_)).to[Seq],
         proto.getDocker.getImage)
+
+    case _ => throw new ClassNotFoundException(s"Unknown container type: ${proto.getType.name()}")
   }
 
   sealed trait Type {

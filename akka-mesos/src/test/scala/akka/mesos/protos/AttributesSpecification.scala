@@ -7,7 +7,7 @@ import scala.collection.immutable.{ NumericRange, Seq }
 import scala.collection.JavaConverters._
 import scala.util.Success
 
-class ScalarAttributeSpecification extends Properties("ScalarAttribute") {
+object ScalarAttributeSpecification extends Properties("ScalarAttribute") {
   import org.scalacheck.Prop.forAll
 
   property("toProto") = forAll { (name: String, scalar: Double) =>
@@ -53,7 +53,7 @@ class ScalarAttributeSpecification extends Properties("ScalarAttribute") {
   }
 }
 
-class RangesAttributeSpecification extends Properties("RangesAttribute") {
+object RangesAttributeSpecification extends Properties("RangesAttribute") {
   import org.scalacheck.Prop.forAll
 
   val longRangeGen: Gen[NumericRange[Long]] = for {
@@ -99,7 +99,7 @@ class RangesAttributeSpecification extends Properties("RangesAttribute") {
   }
 }
 
-class SetAttributeSpecification extends Properties("SetAttribute") {
+object SetAttributeSpecification extends Properties("SetAttribute") {
   import org.scalacheck.Prop.forAll
 
   property("toProto") = forAll { (name: String, set: Set[String]) =>
@@ -133,7 +133,7 @@ class SetAttributeSpecification extends Properties("SetAttribute") {
   }
 }
 
-class TextAttributeSpecification extends Properties("TextAttribute") {
+object TextAttributeSpecification extends Properties("TextAttribute") {
   import org.scalacheck.Prop.forAll
 
   property("toProto") = forAll { (name: String, text: String) =>

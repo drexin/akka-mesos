@@ -4,6 +4,8 @@ import akka.util.ByteString
 import org.apache.mesos.Protos
 import com.google.protobuf.{ ByteString => PBByteString }
 
+import scala.util.Try
+
 final case class TaskStatus(
     taskId: TaskID,
     state: TaskState,
@@ -31,7 +33,7 @@ final case class TaskStatus(
   }
 }
 
-object TaskStatus {
+object TaskStatus extends ProtoReads[TaskStatus] {
   def apply(proto: Protos.TaskStatus): TaskStatus = {
     val message = if (proto.hasMessage) Some(proto.getMessage) else None
     val data = if (proto.hasData) Some(ByteString(proto.getData.toByteArray)) else None
@@ -49,5 +51,9 @@ object TaskStatus {
       executorId,
       timestamp,
       healthy)
+  }
+
+  override def fromBytes(bytes: Array[Byte]): Try[TaskStatus] = Try {
+    TaskStatus(Protos.TaskStatus.parseFrom(bytes))
   }
 }
