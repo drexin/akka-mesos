@@ -2,12 +2,12 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos
 
-final class PerfStatistics(
+final case class PerfStatistics(
     timestamp: Double,
     duration: Double,
     hardware: PerfStatistics.Hardware,
     software: PerfStatistics.Software,
-    cache: PerfStatistics.Cache) {
+    cache: PerfStatistics.Cache) extends ProtoWrapper[Protos.PerfStatistics] {
   def toProto: Protos.PerfStatistics = {
     Protos.PerfStatistics
       .newBuilder
@@ -31,7 +31,7 @@ object PerfStatistics {
       branches: Option[Long] = None,
       branchMisses: Option[Long] = None,
       busCycles: Option[Long] = None,
-      refCycles: Option[Long]) {
+      refCycles: Option[Long] = None) {
     def toProto: Protos.PerfStatistics = {
       val builder = Protos.PerfStatistics.newBuilder
 
@@ -59,7 +59,7 @@ object PerfStatistics {
       contextSwitches: Option[Long] = None,
       cpuMigrations: Option[Long] = None,
       alignmentFaults: Option[Long] = None,
-      emulationFaults: Option[Long]) {
+      emulationFaults: Option[Long] = None) {
     def toProto: Protos.PerfStatistics = {
       val builder = Protos.PerfStatistics.newBuilder
 
@@ -109,7 +109,7 @@ object PerfStatistics {
       nodeStores: Option[Long] = None,
       nodeStoreMisses: Option[Long] = None,
       nodePrefetches: Option[Long] = None,
-      nodePrefetchMisses: Option[Long]) {
+      nodePrefetchMisses: Option[Long] = None) {
     def toProto: Protos.PerfStatistics = {
       val builder = Protos.PerfStatistics.newBuilder
 
@@ -148,5 +148,9 @@ object PerfStatistics {
 
       builder.build()
     }
+  }
+
+  def apply(proto: Protos.PerfStatistics): PerfStatistics = {
+    PerfStatistics(proto.getTimestamp, proto.getDuration, Hardware(), Software(), Cache())
   }
 }
