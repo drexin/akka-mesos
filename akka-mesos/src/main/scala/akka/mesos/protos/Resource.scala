@@ -5,6 +5,8 @@ import org.apache.mesos.Protos.{ Value => PBValue }
 import scala.collection.JavaConverters._
 import scala.collection.immutable.NumericRange
 
+class UnknownResourceTypeException(tpe: Protos.Value.Type) extends Exception(s"Unknown resource type'${tpe.name()}'")
+
 sealed trait Resource extends ProtoWrapper[Protos.Resource] {
   def tpe: ResourceType
   def role: Option[String]
@@ -38,7 +40,7 @@ object Resource {
           role = role
         )
 
-      case _ => ???
+      case x => throw new UnknownResourceTypeException(x)
     }
   }
 }

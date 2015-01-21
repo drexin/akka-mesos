@@ -6,11 +6,8 @@ import org.scalacheck.{ Arbitrary, Gen, Properties }
 
 import scala.util.Success
 
-object VolumeSpecification extends Properties("Volume") {
+object VolumeSpecification extends Properties("Volume") with ProtoGenerators {
   import org.scalacheck.Prop.forAll
-
-  val volumeModeGen = Gen.oneOf(Volume.Mode.RO, Volume.Mode.RW)
-  implicit lazy val arbVolumeMode: Arbitrary[Volume.Mode] = Arbitrary(volumeModeGen)
 
   property("toProto") = forAll { (containerPath: String, mode: Volume.Mode, hostPath: Option[String]) =>
     val builder = Protos.Volume

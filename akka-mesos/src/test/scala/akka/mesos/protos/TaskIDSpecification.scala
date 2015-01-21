@@ -5,7 +5,7 @@ import org.scalacheck.Properties
 
 import scala.util.Success
 
-class TaskIDSpecification extends Properties("TaskID") {
+object TaskIDSpecification extends Properties("TaskID") {
   import org.scalacheck.Prop.forAll
 
   property("toProto") = forAll { (id: String) =>

@@ -53,20 +53,8 @@ object ScalarAttributeSpecification extends Properties("ScalarAttribute") {
   }
 }
 
-object RangesAttributeSpecification extends Properties("RangesAttribute") {
+object RangesAttributeSpecification extends Properties("RangesAttribute") with ProtoGenerators {
   import org.scalacheck.Prop.forAll
-
-  val longRangeGen: Gen[NumericRange[Long]] = for {
-    begin <- Gen.posNum[Long]
-    end <- Gen.chooseNum[Long](begin + 1, begin + Int.MaxValue - 1)
-  } yield begin.toLong to end
-
-  val longRangeListGen: Gen[Seq[NumericRange[Long]]] = Gen.sized { x =>
-    Gen.listOfN(x % Int.MaxValue, longRangeGen)
-  }
-
-  implicit lazy val arbLongRange = Arbitrary(longRangeGen)
-  implicit lazy val arbLongRangeList = Arbitrary(longRangeListGen)
 
   property("toProto") = forAll { (name: String, ranges: Seq[NumericRange[Long]]) =>
     val proto = Protos.Attribute

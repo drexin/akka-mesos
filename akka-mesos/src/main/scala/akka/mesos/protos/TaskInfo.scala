@@ -5,6 +5,7 @@ import org.apache.mesos.Protos
 import com.google.protobuf.{ ByteString => PBByteString }
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 final case class TaskInfo(
     name: String,
@@ -33,7 +34,7 @@ final case class TaskInfo(
   }
 }
 
-object TaskInfo {
+object TaskInfo extends ProtoReads[TaskInfo] {
   def apply(proto: Protos.TaskInfo): TaskInfo = {
     val executor = if (proto.hasExecutor) Some(ExecutorInfo(proto.getExecutor)) else None
     val command = if (proto.hasCommand) Some(CommandInfo(proto.getCommand)) else None
@@ -49,5 +50,9 @@ object TaskInfo {
       command,
       data,
       healthCheck)
+  }
+
+  override def fromBytes(bytes: Array[Byte]): Try[TaskInfo] = Try {
+    TaskInfo(Protos.TaskInfo.parseFrom(bytes))
   }
 }

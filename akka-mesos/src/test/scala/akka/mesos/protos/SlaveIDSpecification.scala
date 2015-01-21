@@ -5,7 +5,7 @@ import org.scalacheck.Properties
 
 import scala.util.Success
 
-class SlaveIDSpecification extends Properties("SlaveID") {
+object SlaveIDSpecification extends Properties("SlaveID") {
   import org.scalacheck.Prop.forAll
 
   property("toProto") = forAll { (id: String) =>
