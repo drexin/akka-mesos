@@ -38,7 +38,7 @@ object AkkaMesosBuild extends Build {
 
     scalacOptions in Compile ++= Seq(
       "-encoding", "UTF-8",
-      "-target:jvm-1.8",
+      "-target:jvm-1.6",
       "-deprecation",
       "-feature",
       "-unchecked",
