@@ -42,7 +42,7 @@ object ResourceStatistics extends ProtoReads[ResourceStatistics] {
       builder.build()
     }
 
-    private def durationToSeconds(d: Duration): Double = d.toMillis / 1000
+    private def durationToSeconds(d: Duration): Double = d.toMillis.toDouble / 1000
   }
 
   object CPU {

@@ -4,6 +4,9 @@ import org.apache.mesos.Protos
 import org.apache.mesos.Protos.{ Value => PBValue }
 import scala.collection.JavaConverters._
 import scala.collection.immutable.NumericRange
+import scala.util.Try
+
+import scala.collection.immutable._
 
 class UnknownResourceTypeException(tpe: Protos.Value.Type) extends Exception(s"Unknown resource type'${tpe.name()}'")
 
@@ -14,7 +17,7 @@ sealed trait Resource extends ProtoWrapper[Protos.Resource] {
   def toProto: Protos.Resource
 }
 
-object Resource {
+object Resource extends ProtoReads[Resource] {
   def apply(proto: Protos.Resource): Resource = {
     val role = if (proto.hasRole) Some(proto.getRole) else None
 
@@ -29,19 +32,23 @@ object Resource {
       case Protos.Value.Type.RANGES =>
         RangesResource(
           tpe = ResourceType(proto.getName),
-          value = proto.getRanges.getRangeList.asScala.map(x => Range.Long(x.getBegin, x.getEnd, 1)),
+          value = proto.getRanges.getRangeList.asScala.map(x => Range.Long(x.getBegin, x.getEnd, 1).inclusive).to[Seq],
           role = role
         )
 
       case Protos.Value.Type.SET =>
         SetResource(
           tpe = ResourceType(proto.getName),
-          value = proto.getSet.getItemList.asScala,
+          value = proto.getSet.getItemList.asScala.to[Set],
           role = role
         )
 
       case x => throw new UnknownResourceTypeException(x)
     }
+  }
+
+  override def fromBytes(bytes: Array[Byte]): Try[Resource] = Try {
+    Resource(Protos.Resource.parseFrom(bytes))
   }
 }
 
@@ -73,7 +80,7 @@ final case class RangesResource(
         .newBuilder
         .setName(tpe.toString)
         .setRanges(ranges)
-        .setType(PBValue.Type.SCALAR)
+        .setType(PBValue.Type.RANGES)
 
     role.foreach(builder.setRole)
 
@@ -98,7 +105,7 @@ final case class RangesResource(
 
 final case class SetResource(
     tpe: ResourceType,
-    value: Seq[String],
+    value: Set[String],
     role: Option[String] = None) extends Resource {
   def toProto: Protos.Resource = {
     val builder =
@@ -106,7 +113,7 @@ final case class SetResource(
         .newBuilder
         .setName(tpe.toString)
         .setSet(Protos.Value.Set.newBuilder.addAllItem(value.asJava).build())
-        .setType(PBValue.Type.SCALAR)
+        .setType(PBValue.Type.SET)
 
     role.foreach(builder.setRole)
 

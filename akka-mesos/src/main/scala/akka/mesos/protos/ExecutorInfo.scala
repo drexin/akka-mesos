@@ -5,20 +5,22 @@ import org.apache.mesos.Protos
 import scala.collection.JavaConverters._
 import com.google.protobuf.{ ByteString => PBByteString }
 
+import scala.util.Try
+
 final case class ExecutorInfo(
-    executorID: ExecutorID,
+    executorId: ExecutorID,
     command: CommandInfo,
-    resources: Seq[Resource],
+    resources: Seq[Resource] = Nil,
     frameworkId: Option[FrameworkID] = None,
-    name: Option[String],
-    source: Option[String],
-    data: Option[ByteString],
-    container: Option[ContainerInfo]) extends ProtoWrapper[Protos.ExecutorInfo] {
+    name: Option[String] = None,
+    source: Option[String] = None,
+    data: Option[ByteString] = None,
+    container: Option[ContainerInfo] = None) extends ProtoWrapper[Protos.ExecutorInfo] {
   def toProto: Protos.ExecutorInfo = {
     val builder =
       Protos.ExecutorInfo
         .newBuilder
-        .setExecutorId(executorID.toProto)
+        .setExecutorId(executorId.toProto)
         .setCommand(command.toProto)
         .addAllResources(resources.map(_.toProto).asJava)
 
@@ -32,7 +34,7 @@ final case class ExecutorInfo(
   }
 }
 
-object ExecutorInfo {
+object ExecutorInfo extends ProtoReads[ExecutorInfo] {
   def apply(proto: Protos.ExecutorInfo): ExecutorInfo = {
     val frameworkId = if (proto.hasFrameworkId) Some(FrameworkID(proto.getFrameworkId)) else None
     val name = if (proto.hasName) Some(proto.getName) else None
@@ -50,5 +52,9 @@ object ExecutorInfo {
       data,
       container
     )
+  }
+
+  override def fromBytes(bytes: Array[Byte]): Try[ExecutorInfo] = Try {
+    ExecutorInfo(Protos.ExecutorInfo.parseFrom(bytes))
   }
 }

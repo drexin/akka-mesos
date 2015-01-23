@@ -14,7 +14,7 @@ class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
 
   val log = LoggerFactory.getLogger(getClass)
   var taskCounter: Int = 0
-  def TaskMem = 16
+  def TaskMem = 16.0
   def TaskCPUs = 0.1
 
   override def registered(frameworkId: FrameworkID, masterInfo: MasterInfo): Unit = {

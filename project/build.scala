@@ -34,16 +34,20 @@ object AkkaMesosBuild extends Build {
 
   lazy val baseSettings = Defaults.defaultSettings ++ formatSettings ++ releaseSettings ++ Seq(
     organization := "io.mesosphere.akka",
-    scalaVersion := "2.11.4",
+    scalaVersion := "2.11.5",
 
     scalacOptions in Compile ++= Seq(
-      "-unchecked",
+      "-encoding", "UTF-8",
+      "-target:jvm-1.8",
       "-deprecation",
       "-feature",
+      "-unchecked",
+      "-Xlog-reflective-calls",
       "-Xlint",
+      "-Ywarn-unused-import",
       "-Xfatal-warnings",
       "-Yno-adapted-args",
-      "-Ywarn-unused-import"
+      "-Ywarn-numeric-widen"
     ),
     parallelExecution in Test := false
   )
@@ -92,7 +96,7 @@ object Dependencies {
 
 object Dependency {
   object V {
-    val Akka        = "2.3.8"
+    val Akka        = "2.3.9"
     val AkkaHttp    = "1.0-M2"
     val Protobuf    = "2.5.0"
     val Config      = "1.2.1"

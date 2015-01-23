@@ -10,7 +10,7 @@ final case class Filters(refuse: Option[Duration]) extends ProtoWrapper[Protos.F
   def toProto: Protos.Filters = {
     val builder = Protos.Filters.newBuilder
 
-    refuse.foreach(x => builder.setRefuseSeconds(x.toMillis / 1000))
+    refuse.foreach(x => builder.setRefuseSeconds(x.toMillis.toDouble / 1000))
 
     builder.build()
   }

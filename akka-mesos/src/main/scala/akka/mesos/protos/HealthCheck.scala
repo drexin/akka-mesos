@@ -7,6 +7,7 @@ import org.apache.mesos.Protos
 import scala.concurrent.duration._
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 sealed trait HealthCheck extends ProtoWrapper[Protos.HealthCheck] {
   def delay: Option[Duration]
@@ -28,10 +29,14 @@ sealed trait HealthCheck extends ProtoWrapper[Protos.HealthCheck] {
   }
 }
 
-object HealthCheck {
+object HealthCheck extends ProtoReads[HealthCheck] {
   def apply(proto: Protos.HealthCheck): HealthCheck = {
     if (proto.hasHttp) HTTPHealthCheck(proto)
     else CommandHealthCheck(proto)
+  }
+
+  override def fromBytes(bytes: Array[Byte]): Try[HealthCheck] = Try {
+    HealthCheck(Protos.HealthCheck.parseFrom(bytes))
   }
 }
 
