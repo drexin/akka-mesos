@@ -20,10 +20,11 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
   import context.dispatcher
 
   val connectionRetryDelay = context.system.settings.config.getDuration("akka.libprocess.retry-delay", TimeUnit.MILLISECONDS).millis
+  val timeout: Timeout = context.system.settings.config.getDuration("akka.libprocess.timeout", TimeUnit.MILLISECONDS).millis
 
   var schedulerRef: Option[ActorRef] = None
   var masterRef: ActorRef = _
-  var frameworkId: Option[FrameworkID] = None
+  var frameworkId: Option[FrameworkID] = framework.id
   var scheduledTask: Option[Cancellable] = None
 
   override def preStart(): Unit = {
@@ -62,7 +63,8 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
       master match {
         case Success(masterPid) => LibProcess(context.system).remoteRef(masterPid).map(MasterRef) pipeTo self
         case Failure(e) =>
-          log.error(e, "Failed to retrieve master PID.")
+          log.error(e, s"Failed to retrieve master PID. Trying again in ${connectionRetryDelay.toMillis}ms.")
+          scheduleConnect(connectionRetryDelay)
       }
 
     case msg @ MasterRef(ref) =>
@@ -95,7 +97,6 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
     case msg @ FrameworkRegisteredMessage(id, _) =>
       scheduledTask.foreach(_.cancel())
       frameworkId = Some(id)
-      val timeout: Timeout = context.system.settings.config.getDuration("akka.libprocess.timeout", TimeUnit.MILLISECONDS).millis
 
       if (schedulerRef.isEmpty)
         schedulerRef = Some(context.actorOf(Props(classOf[SchedulerActor], framework, self, masterRef, timeout, schedulerCreator)))
@@ -107,6 +108,10 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
     case msg @ FrameworkReregisteredMessage(id, _) =>
       scheduledTask.foreach(_.cancel())
       frameworkId = Some(id)
+
+      if (schedulerRef.isEmpty)
+        schedulerRef = Some(context.actorOf(Props(classOf[SchedulerActor], framework, self, masterRef, timeout, schedulerCreator)))
+
       schedulerRef.foreach { ref =>
         ref forward msg
         ref ! MasterRef(masterRef)
