@@ -5,7 +5,9 @@ import mesos.internal.Messages
 
 import scala.util.Try
 
-final case class FrameworkErrorMessage(message: String) extends ProtoWrapper[Messages.FrameworkErrorMessage] {
+final case class FrameworkErrorMessage(message: String)
+    extends ProtoWrapper[Messages.FrameworkErrorMessage]
+    with SchedulerMessage {
   def toProto: Messages.FrameworkErrorMessage =
     Messages.FrameworkErrorMessage
       .newBuilder

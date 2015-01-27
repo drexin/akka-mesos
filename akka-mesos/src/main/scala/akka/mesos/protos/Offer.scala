@@ -2,8 +2,8 @@ package akka.mesos.protos
 
 import org.apache.mesos.Protos
 
-import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Seq
 
 final case class Offer(
     id: OfferID,

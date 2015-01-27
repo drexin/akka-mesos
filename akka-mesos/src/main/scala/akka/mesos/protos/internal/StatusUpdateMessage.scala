@@ -8,7 +8,7 @@ import scala.util.Try
 
 final case class StatusUpdateMessage(
     statusUpdate: StatusUpdate,
-    pid: Option[PID]) extends ProtoWrapper[Messages.StatusUpdateMessage] {
+    pid: Option[PID]) extends ProtoWrapper[Messages.StatusUpdateMessage] with SchedulerMessage {
   def toProto: Messages.StatusUpdateMessage = {
     val builder = Messages.StatusUpdateMessage
       .newBuilder

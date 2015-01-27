@@ -2,13 +2,16 @@ package akka.mesos
 
 import akka.libprocess.PID
 import akka.mesos.protos._
-import akka.mesos.scheduler.{ SchedulerDriver, Scheduler }
+import akka.mesos.protos.internal.ResourceOffersMessage
+import akka.mesos.scheduler.{ Scheduler, SchedulerDriver }
+import akka.stream.FlowMaterializer
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
+import scala.util.Success
 
 class MyScheduler(_driver: SchedulerDriver) extends Scheduler(_driver) {
 
@@ -87,15 +90,55 @@ object Main extends App {
   import akka.actor._
 
   val config = ConfigFactory.load()
+  val log = LoggerFactory.getLogger("Main")
+  var taskCounter: Int = 0
+  val TaskMem = 16.0
+  val TaskCPUs = 0.1
 
-  val system = ActorSystem("Mesos", config)
+  implicit val system = ActorSystem("Mesos", config)
 
-  val framework = FrameworkInfo(
+  val frameworkInfo = FrameworkInfo(
     name = "foo",
     user = "corpsi",
     failoverTimeout = Some(5.minutes),
     checkpoint = Some(true)
   )
 
-  Mesos(system).registerFramework(PID("127.0.0.1", 5050, "master"), framework, driver => new MyScheduler(driver))
+  val framework = Mesos(system).registerFramework(Success(PID("127.0.0.1", 5050, "master")), frameworkInfo)
+
+  implicit val materializer = FlowMaterializer()
+  framework.schedulerMessages.foreach {
+    case o: ResourceOffersMessage =>
+      o.offers foreach { offer =>
+        log.info(s"Starting sleep task with offer: ${offer.id}")
+
+        val memCount = offer.resources.collectFirst {
+          case ScalarResource(tpe, value, _) if tpe == ResourceType.MEM => (value / TaskMem).toInt
+        }.getOrElse(0)
+
+        val cpuCount = offer.resources.collectFirst {
+          case ScalarResource(tpe, value, _) if tpe == ResourceType.CPUS => (value / TaskCPUs).toInt
+        }.getOrElse(0)
+
+        val taskCount = memCount min cpuCount
+
+        val tasks = for (_ <- 0 until taskCount) yield {
+          val task = TaskInfo(
+            name = "sleep",
+            taskId = TaskID(s"sleep-$taskCounter"),
+            slaveId = offer.slaveId,
+            Seq(ScalarResource(ResourceType.MEM, TaskMem), ScalarResource(ResourceType.CPUS, TaskCPUs)),
+            command = Some(
+              CommandInfo(
+                value = "sleep 10"
+              )
+            )
+          )
+          taskCounter += 1
+          task
+        }
+        framework.driver.launchTasks(tasks, Seq(offer.id))
+      }
+    case x => println(s"Received $x")
+  }
 }

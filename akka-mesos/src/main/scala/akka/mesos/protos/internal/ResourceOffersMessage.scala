@@ -9,7 +9,7 @@ import scala.util.Try
 
 final case class ResourceOffersMessage(
     offers: Seq[Offer],
-    pids: Seq[String]) extends ProtoWrapper[Messages.ResourceOffersMessage] {
+    pids: Seq[String]) extends ProtoWrapper[Messages.ResourceOffersMessage] with SchedulerMessage {
   def toProto: Messages.ResourceOffersMessage =
     Messages.ResourceOffersMessage
       .newBuilder

@@ -5,7 +5,9 @@ import mesos.internal.Messages
 
 import scala.util.Try
 
-final case class LostSlaveMessage(slaveId: SlaveID) extends ProtoWrapper[Messages.LostSlaveMessage] {
+final case class LostSlaveMessage(slaveId: SlaveID)
+    extends ProtoWrapper[Messages.LostSlaveMessage]
+    with SchedulerMessage {
   def toProto: Messages.LostSlaveMessage =
     Messages.LostSlaveMessage
       .newBuilder

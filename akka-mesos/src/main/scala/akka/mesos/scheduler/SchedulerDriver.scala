@@ -1,10 +1,9 @@
 package akka.mesos.scheduler
 
 import akka.actor.{ ActorRef, PoisonPill }
-import akka.libprocess.LibProcessMessage
 import akka.mesos.MesosFrameworkActor.Deactivate
 import akka.mesos.protos._
-import akka.mesos.protos.internal._
+import akka.mesos.stream.SchedulerDriverActor._
 import akka.pattern.ask
 import akka.util.{ ByteString, Timeout }
 
@@ -13,13 +12,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 final class SchedulerDriver private[mesos] (
     frameworkInfo: FrameworkInfo,
-    frameworkId: FrameworkID,
     framework: ActorRef,
-    private[mesos] var master: ActorRef)(implicit ec: ExecutionContext, timeout: Timeout) {
+    driverRef: ActorRef)(implicit ec: ExecutionContext, timeout: Timeout) {
 
   def stop(failover: Boolean): Unit = {
     val res = if (!failover) {
-      master ? LibProcessMessage(frameworkInfo.name, UnregisterFrameworkMessage(frameworkId))
+      driverRef ? UnregisterFramework
     } else Future.successful(())
 
     res onComplete {
@@ -30,32 +28,32 @@ final class SchedulerDriver private[mesos] (
   def stop(): Unit = stop(failover = false)
 
   def abort(): Unit = {
-    send(DeactivateFrameworkMessage(frameworkId))
+    send(DeactivateFramework)
     framework ! Deactivate
   }
 
   def requestResources(requests: Seq[Request]): Unit =
-    send(ResourceRequestMessage(frameworkId, requests))
+    send(ResourceRequest(requests))
 
   def launchTasks(tasks: Seq[TaskInfo], offers: Seq[OfferID], filters: Filters): Unit =
-    send(LaunchTasksMessage(frameworkId, tasks, offers, filters))
+    send(LaunchTasks(tasks, offers, filters))
 
   def launchTasks(tasks: Seq[TaskInfo], offers: Seq[OfferID]): Unit = launchTasks(tasks, offers, Filters(None))
 
-  def killTask(taskId: TaskID): Unit = send(KillTaskMessage(frameworkId, taskId))
+  def killTask(taskId: TaskID): Unit = send(KillTask(taskId))
 
   def declineOffer(offerId: OfferID, filters: Filters): Unit =
-    send(DeclineResourceOfferMessage(frameworkId, offerId, filters))
+    send(DeclineResourceOffer(offerId, filters))
 
   def declineOffer(offerId: OfferID): Unit = declineOffer(offerId, Filters(None))
 
-  def reviveOffers(): Unit = send(ReviveOffersMessage(frameworkId))
+  def reviveOffers(): Unit = send(ReviveOffers)
 
   def sendFrameworkMessage(executorId: ExecutorID, slaveId: SlaveID, data: ByteString): Unit =
-    send(FrameworkToExecutorMessage(slaveId, frameworkId, executorId, data))
+    send(FrameworkMessage(slaveId, executorId, data))
 
   def reconcileTasks(statuses: Seq[TaskStatus]): Unit =
-    send(ReconcileTasksMessage(frameworkId, statuses))
+    send(ReconcileTasks(statuses))
 
-  private def send(msg: ProtoWrapper[_]) = master ! LibProcessMessage(frameworkInfo.name, msg)
+  private def send(msg: SchedulerDriverMessage) = driverRef ! msg
 }

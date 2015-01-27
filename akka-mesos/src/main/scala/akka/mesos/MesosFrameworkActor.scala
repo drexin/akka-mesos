@@ -4,25 +4,25 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor._
 import akka.libprocess.LibProcessManager.Registered
-import akka.libprocess.{ LibProcess, LibProcessMessage, LibProcessManager, PID }
-import akka.mesos.protos.internal.{ FrameworkReregisteredMessage, FrameworkRegisteredMessage, ReregisterFrameworkMessage, RegisterFrameworkMessage }
-import akka.mesos.protos.{ ProtoWrapper, FrameworkID, FrameworkInfo }
-import akka.mesos.scheduler.{ Scheduler, SchedulerDriver, SchedulerActor }
+import akka.libprocess.{ LibProcess, LibProcessManager, LibProcessMessage, PID }
+import akka.mesos.protos.internal._
+import akka.mesos.protos.{ FrameworkID, FrameworkInfo }
+import akka.mesos.stream.SchedulerDriverActor.FrameworkConnected
 import akka.pattern.pipe
 import akka.util.Timeout
 
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
+import scala.util.{ Failure, Success, Try }
 
-private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: FrameworkInfo, schedulerCreator: SchedulerDriver => Scheduler) extends Actor with Stash with ActorLogging {
+private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: FrameworkInfo, driverRef: ActorRef) extends Actor with Stash with ActorLogging {
   import akka.mesos.MesosFrameworkActor._
   import context.dispatcher
 
   val connectionRetryDelay = context.system.settings.config.getDuration("akka.libprocess.retry-delay", TimeUnit.MILLISECONDS).millis
-  val timeout: Timeout = context.system.settings.config.getDuration("akka.libprocess.timeout", TimeUnit.MILLISECONDS).millis
+  implicit val timeout: Timeout = context.system.settings.config.getDuration("akka.libprocess.timeout", TimeUnit.MILLISECONDS).millis
 
-  var schedulerRef: Option[ActorRef] = None
+  var schedulerRef: ActorRef = _
   var masterRef: ActorRef = _
   var frameworkId: Option[FrameworkID] = framework.id
   var scheduledTask: Option[Cancellable] = None
@@ -37,6 +37,15 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
 
   def receive = {
     case Registered(framework.`name`) =>
+      context.become(receiveScheduler)
+      unstashAll()
+
+    case _ => stash()
+  }
+
+  def receiveScheduler: Receive = {
+    case RegisterScheduler(ref) =>
+      schedulerRef = ref
       scheduleConnect(0.seconds)
       context.become(connecting)
       unstashAll()
@@ -48,13 +57,14 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
     case Terminated(ref) if ref == masterRef =>
       log.warning(s"Lost connection to master, trying to reconnect in ${connectionRetryDelay.toMillis}ms.")
       context.unwatch(ref)
-      schedulerRef.foreach(_ ! MasterDisconnected)
       scheduleConnect(connectionRetryDelay)
       context.become(connecting)
 
-    case Deactivate         => context.become(connecting)
+    case Deactivate =>
+      driverRef ! Disconnected
+      context.become(connecting)
 
-    case x: ProtoWrapper[_] => schedulerRef.foreach(_ forward x)
+    case x: SchedulerMessage => schedulerRef ! x
   }
 
   def connecting: Receive = {
@@ -98,10 +108,9 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
       scheduledTask.foreach(_.cancel())
       frameworkId = Some(id)
 
-      if (schedulerRef.isEmpty)
-        schedulerRef = Some(context.actorOf(Props(classOf[SchedulerActor], framework, self, masterRef, timeout, schedulerCreator)))
+      schedulerRef ! msg
+      driverRef ! FrameworkConnected(masterRef, id)
 
-      schedulerRef.foreach(_ forward msg)
       context.become(ready)
       unstashAll()
 
@@ -109,20 +118,16 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
       scheduledTask.foreach(_.cancel())
       frameworkId = Some(id)
 
-      if (schedulerRef.isEmpty)
-        schedulerRef = Some(context.actorOf(Props(classOf[SchedulerActor], framework, self, masterRef, timeout, schedulerCreator)))
+      schedulerRef ! msg
+      driverRef ! FrameworkConnected(masterRef, id)
 
-      schedulerRef.foreach { ref =>
-        ref forward msg
-        ref ! MasterRef(masterRef)
-      }
       context.become(ready)
       unstashAll()
 
     case Terminated(ref) if ref == masterRef =>
       log.warning(s"Lost connection to master, trying to reconnect in ${connectionRetryDelay.toMillis}ms.")
       context.unwatch(ref)
-      schedulerRef.foreach(_ ! MasterDisconnected)
+      driverRef ! Disconnected
       scheduleConnect(connectionRetryDelay)
       context.become(registering)
 
@@ -139,8 +144,9 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
 
 object MesosFrameworkActor {
   final case class MasterRef(ref: ActorRef)
+  final case class RegisterScheduler(ref: ActorRef)
   case object Connect
-  case object MasterDisconnected
+  case object Disconnected extends SchedulerMessage
   case object Register
   case object Deactivate
 }

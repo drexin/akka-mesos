@@ -7,7 +7,7 @@ import scala.util.Try
 
 final case class FrameworkReregisteredMessage(
     frameworkId: FrameworkID,
-    masterInfo: MasterInfo) extends ProtoWrapper[Messages.FrameworkReregisteredMessage] {
+    masterInfo: MasterInfo) extends ProtoWrapper[Messages.FrameworkReregisteredMessage] with SchedulerMessage {
   def toProto: Messages.FrameworkReregisteredMessage =
     Messages.FrameworkReregisteredMessage
       .newBuilder
