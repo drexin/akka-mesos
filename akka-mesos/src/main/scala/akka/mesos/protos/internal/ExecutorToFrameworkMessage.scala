@@ -11,7 +11,7 @@ final case class ExecutorToFrameworkMessage(
     slaveId: SlaveID,
     frameworkId: FrameworkID,
     executorId: ExecutorID,
-    data: ByteString) extends ProtoWrapper[Messages.ExecutorToFrameworkMessage] with SchedulerMessage {
+    data: ByteString) extends ProtoWrapper[Messages.ExecutorToFrameworkMessage] {
   def toProto: Messages.ExecutorToFrameworkMessage =
     Messages.ExecutorToFrameworkMessage
       .newBuilder

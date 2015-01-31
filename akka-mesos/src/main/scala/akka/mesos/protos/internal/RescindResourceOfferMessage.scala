@@ -6,8 +6,7 @@ import mesos.internal.Messages
 import scala.util.Try
 
 final case class RescindResourceOfferMessage(offerId: OfferID)
-    extends ProtoWrapper[Messages.RescindResourceOfferMessage]
-    with SchedulerMessage {
+    extends ProtoWrapper[Messages.RescindResourceOfferMessage] {
   def toProto: Messages.RescindResourceOfferMessage =
     Messages.RescindResourceOfferMessage
       .newBuilder

@@ -9,7 +9,7 @@ final case class ExitedExecutorMessage(
     slaveId: SlaveID,
     frameworkId: FrameworkID,
     executorId: ExecutorID,
-    status: Int) extends ProtoWrapper[Messages.ExitedExecutorMessage] with SchedulerMessage {
+    status: Int) extends ProtoWrapper[Messages.ExitedExecutorMessage] {
   def toProto: Messages.ExitedExecutorMessage =
     Messages.ExitedExecutorMessage
       .newBuilder

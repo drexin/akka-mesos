@@ -84,7 +84,6 @@ private[libprocess] final class LibProcessRemoteActor(receiver: Option[ActorRef]
 
   def formatMessage(pid: PID, msgName: String, data: Array[Byte]): ByteString = {
     val builder = ByteString.newBuilder
-    log.info(pid.toAddressString)
 
     builder append ByteString(s"POST /$name/$msgName HTTP/1.1\r\n")
     builder append ByteString(s"Libprocess-From: ${pid.toAddressString}\r\n")

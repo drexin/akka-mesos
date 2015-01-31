@@ -6,8 +6,10 @@ import akka.actor._
 import akka.libprocess.LibProcessManager.Registered
 import akka.libprocess.{ LibProcess, LibProcessManager, LibProcessMessage, PID }
 import akka.mesos.protos.internal._
-import akka.mesos.protos.{ FrameworkID, FrameworkInfo }
-import akka.mesos.stream.SchedulerDriverActor.FrameworkConnected
+import akka.mesos.protos.{ ProtoWrapper, FrameworkID, FrameworkInfo }
+import akka.mesos.scheduler.SchedulerDriverActor
+import SchedulerDriverActor.FrameworkConnected
+import akka.mesos.scheduler.SchedulerPublisher.{ Disconnected, SchedulerMessage }
 import akka.pattern.pipe
 import akka.util.Timeout
 
@@ -64,7 +66,7 @@ private[mesos] class MesosFrameworkActor(master: => Try[PID], framework: Framewo
       driverRef ! Disconnected
       context.become(connecting)
 
-    case x: SchedulerMessage => schedulerRef ! x
+    case x: ProtoWrapper[_] => SchedulerMessage(x).foreach(schedulerRef ! _)
   }
 
   def connecting: Receive = {
@@ -146,7 +148,6 @@ object MesosFrameworkActor {
   final case class MasterRef(ref: ActorRef)
   final case class RegisterScheduler(ref: ActorRef)
   case object Connect
-  case object Disconnected extends SchedulerMessage
   case object Register
   case object Deactivate
 }

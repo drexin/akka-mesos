@@ -6,9 +6,8 @@ import akka.actor._
 import akka.libprocess._
 import akka.mesos.MesosFrameworkActor.Deactivate
 import akka.mesos.protos._
-import akka.mesos.protos.internal.SchedulerMessage
-import akka.mesos.scheduler.SchedulerDriver
-import akka.mesos.stream.{ SchedulerDriverActor, SchedulerPublisher }
+import akka.mesos.scheduler.SchedulerPublisher.SchedulerMessage
+import akka.mesos.scheduler.{ SchedulerPublisher, SchedulerDriverActor, SchedulerDriver }
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
 

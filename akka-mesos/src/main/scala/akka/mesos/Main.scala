@@ -2,7 +2,8 @@ package akka.mesos
 
 import akka.libprocess.PID
 import akka.mesos.protos._
-import akka.mesos.protos.internal.ResourceOffersMessage
+import akka.mesos.protos.internal.{ StatusUpdateAcknowledgementMessage, ResourceOffersMessage }
+import akka.mesos.scheduler.SchedulerPublisher.{ StatusUpdate, ResourceOffers }
 import akka.mesos.scheduler.{ Scheduler, SchedulerDriver }
 import akka.stream.FlowMaterializer
 import akka.util.ByteString
@@ -108,8 +109,8 @@ object Main extends App {
 
   implicit val materializer = FlowMaterializer()
   framework.schedulerMessages.foreach {
-    case o: ResourceOffersMessage =>
-      o.offers foreach { offer =>
+    case ResourceOffers(offers) =>
+      offers foreach { offer =>
         log.info(s"Starting sleep task with offer: ${offer.id}")
 
         val memCount = offer.resources.collectFirst {
@@ -139,6 +140,11 @@ object Main extends App {
         }
         framework.driver.launchTasks(tasks, Seq(offer.id))
       }
+
+    case StatusUpdate(update) =>
+      println(s"Task ${update.status.taskId} id now ${update.status.state}")
+      framework.driver.acknowledgeStatusUpdate(update)
+
     case x => println(s"Received $x")
   }
 }

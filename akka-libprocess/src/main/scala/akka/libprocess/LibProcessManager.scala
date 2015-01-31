@@ -92,7 +92,6 @@ class LibProcessManager(config: LibProcessConfig) extends Actor with ActorLoggin
           val ref = context.actorOf(Props(classOf[LibProcessRemoteActor], receiver, pid.id, new InetSocketAddress(pid.ip, pid.port), localAddress, messageSerDe))
           context.watch(ref)
           remoteRefCache += pid -> ref
-          log.info(remoteRefCache.toString())
           Some(ref)
         } catch {
           case e: Exception =>

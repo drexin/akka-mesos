@@ -3,7 +3,8 @@ package akka.mesos.scheduler
 import akka.actor.{ ActorRef, PoisonPill }
 import akka.mesos.MesosFrameworkActor.Deactivate
 import akka.mesos.protos._
-import akka.mesos.stream.SchedulerDriverActor._
+import SchedulerDriverActor._
+import akka.mesos.protos.internal.StatusUpdate
 import akka.pattern.ask
 import akka.util.{ ByteString, Timeout }
 
@@ -54,6 +55,9 @@ final class SchedulerDriver private[mesos] (
 
   def reconcileTasks(statuses: Seq[TaskStatus]): Unit =
     send(ReconcileTasks(statuses))
+
+  def acknowledgeStatusUpdate(update: StatusUpdate): Unit =
+    send(AcknowledgeStatusUpdate(update))
 
   private def send(msg: SchedulerDriverMessage) = driverRef ! msg
 }
