@@ -59,7 +59,7 @@ object SchedulerDriverActor {
   final case class FrameworkConnected(masterRef: ActorRef, frameworkId: FrameworkID)
 }
 
-class SchedulerDriverActor(frameworkName: String) extends Actor with Stash {
+private[mesos] final class SchedulerDriverActor(frameworkName: String) extends Actor with Stash {
   var masterRef: ActorRef = _
   var frameworkId: FrameworkID = _
 

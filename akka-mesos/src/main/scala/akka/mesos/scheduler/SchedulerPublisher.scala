@@ -51,7 +51,7 @@ object SchedulerPublisher {
   final case class StatusUpdate(update: internal.StatusUpdate) extends SchedulerMessage
 }
 
-private[mesos] class SchedulerPublisher(frameworkActor: ActorRef) extends ActorPublisher[SchedulerMessage] {
+private[mesos] final class SchedulerPublisher(frameworkActor: ActorRef) extends ActorPublisher[SchedulerMessage] {
 
   var buf = Queue.empty[SchedulerMessage]
 
