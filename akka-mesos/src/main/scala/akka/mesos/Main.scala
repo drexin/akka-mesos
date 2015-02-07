@@ -5,7 +5,7 @@ import akka.mesos.protos._
 import akka.mesos.protos.internal.{ StatusUpdateAcknowledgementMessage, ResourceOffersMessage }
 import akka.mesos.scheduler.SchedulerPublisher.{ StatusUpdate, ResourceOffers }
 import akka.mesos.scheduler.{ Scheduler, SchedulerDriver }
-import akka.stream.FlowMaterializer
+import akka.stream.ActorFlowMaterializer
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
@@ -107,8 +107,8 @@ object Main extends App {
 
   val framework = Mesos(system).registerFramework(Success(PID("127.0.0.1", 5050, "master")), frameworkInfo)
 
-  implicit val materializer = FlowMaterializer()
-  framework.schedulerMessages.foreach {
+  implicit val materializer = ActorFlowMaterializer()
+  framework.schedulerMessages.runForeach {
     case ResourceOffers(offers) =>
       offers foreach { offer =>
         log.info(s"Starting sleep task with offer: ${offer.id}")

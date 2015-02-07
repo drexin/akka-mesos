@@ -11,7 +11,7 @@ import akka.http.Http
 import akka.http.model.{ HttpMethods, HttpRequest, HttpResponse, Uri }
 import akka.libprocess.LibProcessManager.LibProcessInternalMessage
 import akka.libprocess.serde.{ MessageSerDe, TransportMessage }
-import akka.stream.FlowMaterializer
+import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.{ Flow, Sink }
 
 import scala.util.{ Failure, Success, Try }
@@ -20,7 +20,7 @@ private[libprocess] class LibProcessHTTPEndpoint(address: String, port: Int, mes
   import akka.libprocess.LibProcessHTTPEndpoint._
   import context.dispatcher
 
-  implicit val materializer = FlowMaterializer()
+  implicit val materializer = ActorFlowMaterializer()
 
   val pathRegex = "/([^/]+)/(.+)".r
 

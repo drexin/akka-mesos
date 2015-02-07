@@ -97,13 +97,13 @@ object Dependencies {
 object Dependency {
   object V {
     val Akka        = "2.3.9"
-    val AkkaHttp    = "1.0-M2"
+    val AkkaHttp    = "1.0-M3"
     val Protobuf    = "2.5.0"
     val Config      = "1.2.1"
-    val ScalaCheck  = "1.12.1"
-    val ScalaTest   = "2.1.3"
-    val Slf4j       = "1.7.2"
-    val Logback     = "1.0.9"
+    val ScalaCheck  = "1.12.2"
+    val ScalaTest   = "2.2.4"
+    val Slf4j       = "1.7.10"
+    val Logback     = "1.1.2"
   }
 
   val akkaActor   = "com.typesafe.akka"   %%  "akka-actor"                  % V.Akka
