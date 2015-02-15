@@ -30,8 +30,8 @@ class MesosExtension(system: ExtendedActorSystem) extends Extension {
     new Framework {
       private val frameworkActor = system.actorOf(Props(new MesosFrameworkActor(master, framework, driverRef)))
 
-      def shutdown() = frameworkActor ! PoisonPill
-      def deactivate() = frameworkActor ! Deactivate
+      override def shutdown() = frameworkActor ! PoisonPill
+      override def deactivate() = frameworkActor ! Deactivate
 
       override val driver: SchedulerDriver = new SchedulerDriver(framework, frameworkActor, driverRef)
 
@@ -43,4 +43,6 @@ class MesosExtension(system: ExtendedActorSystem) extends Extension {
 trait Framework {
   def schedulerMessages: Source[SchedulerMessage]
   def driver: SchedulerDriver
+  def shutdown(): Unit
+  def deactivate(): Unit
 }
